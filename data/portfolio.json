@@ -1,0 +1,15 @@
+{
+  "inception_date": "2026-05-01",
+  "initial_capital": 25000,
+  "current_cash": 25000.0,
+  "holdings": [],
+  "nav_history": [
+    {
+      "date": "2026-05-01",
+      "nav": 25000.0,
+      "benchmark_tri": null
+    }
+  ],
+  "total_nav": 25000.0,
+  "transaction_log": []
+}
