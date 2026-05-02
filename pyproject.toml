@@ -14,4 +14,26 @@ dependencies = [
 ]
 
 [tool.uv]
-dev-dependencies = []
+dev-dependencies = [
+    "mypy>=1.10",
+    "ruff>=0.4",
+    "pandas-stubs>=2.2",
+    "types-requests>=2.31",
+    "types-tabulate>=0.9",
+]
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true   # yfinance has no type stubs
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]  # line-length enforced by formatter, not linter
