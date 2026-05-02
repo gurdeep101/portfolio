@@ -23,14 +23,14 @@ Read `data/portfolio.json`. Report:
 
 **Step 2 — Refresh universe (conditional)**
 ```
-python scripts/fetch_universe.py
+uv run python scripts/fetch_universe.py
 ```
 The script skips automatically if `data/universe.csv` is less than 90 days old.
 If it runs and the symbol count changes by more than 5, flag this prominently in the session log.
 
 **Step 3 — Fetch prices**
 ```
-python scripts/fetch_prices.py
+uv run python scripts/fetch_prices.py
 ```
 This writes the weekly OHLCV snapshot and updates the daily adj_close history.
 On first run, it pulls 52 weeks of history — expect 60–120 minutes.
@@ -38,20 +38,20 @@ If exit code is non-zero, STOP and report the error. Do not proceed.
 
 **Step 4 — Fetch benchmark**
 ```
-python scripts/fetch_benchmark.py
+uv run python scripts/fetch_benchmark.py
 ```
 If it fails, note it in the session log and skip benchmark comparison this session. Continue.
 
 **Step 5 — Fetch fundamentals (conditional)**
 ```
-python scripts/fetch_fundamentals.py
+uv run python scripts/fetch_fundamentals.py
 ```
 The script skips symbols fetched within the last 7 days. On first run, expect 5–15 minutes.
 If it fails entirely, use the most recent `data/fundamentals/` file and log a warning.
 
 **Step 6 — Validate data (gate)**
 ```
-python scripts/validate_data.py
+uv run python scripts/validate_data.py
 ```
 Read output carefully.
 - If exit code is 1: STOP. Report the blocking errors to the user. Do not rebalance.
@@ -60,7 +60,7 @@ Read output carefully.
 
 **Step 7 — Compute metrics**
 ```
-python scripts/compute_metrics.py
+uv run python scripts/compute_metrics.py
 ```
 Read the full output. This script also writes a row to `data/performance.csv`.
 Pay attention to:
@@ -94,7 +94,7 @@ If no trades are needed, write an empty trades array with a notes explaining why
 
 **Step 10 — Execute rebalance**
 ```
-python scripts/update_portfolio.py --decisions decisions/YYYY-MM-DD.json
+uv run python scripts/update_portfolio.py --decisions decisions/YYYY-MM-DD.json
 ```
 Read the printed summary. Verify NAV is approximately preserved (minus transaction costs).
 
