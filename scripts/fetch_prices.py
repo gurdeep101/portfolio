@@ -18,15 +18,21 @@ Data sources (tried in order):
 
 from __future__ import annotations
 
+import argparse
 import json
 import random
 import sys
 import time
+import warnings
 from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
+
+# Suppress yfinance / pandas deprecation chatter that isn't actionable
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*utcnow.*")
 
 print(f"yfinance version: {yf.__version__}")
 
@@ -38,12 +44,21 @@ DAILY_FILE = PRICES_DIR / "daily_adj_close.csv"
 BATCH_SIZE = 50               # symbols per yf.download call
 FAILURE_THRESHOLD_PCT = 0.08  # abort if > this fraction return no data from ANY source
 HISTORY_WEEKS = 52            # weeks of history pulled on first run
+# Weekly/incremental: short sleep is fine (few calls per session)
 SLEEP_MIN_S = 3.0             # min random sleep between yfinance batches
 SLEEP_MAX_S = 10.0            # max random sleep between yfinance batches
+# First-run / large history: use longer sleeps to avoid rate limits across 5 chunks
+SLEEP_HIST_MIN_S = 15.0       # min sleep between batches in a multi-chunk run
+SLEEP_HIST_MAX_S = 30.0       # max sleep between batches in a multi-chunk run
+SLEEP_INTER_CHUNK_S = 60.0    # sleep between date chunks (fixed, not random)
+
+# For first-run (large history), split into chunks to avoid rate-limits.
+# Yahoo Finance rate-limits aggressively on 52-week single requests.
+YF_CHUNK_WEEKS = 12           # max weeks per single yf.download call
 
 # Retry config for yfinance rate-limit errors
 YF_MAX_RETRIES = 3
-YF_RETRY_BASE_S = 30.0        # first retry after 30s; doubles each time
+YF_RETRY_BASE_S = 45.0        # first retry after 45s; doubles each time (45→90→180)
 
 NSE_MARKET_URL = "https://www.nseindia.com/market-data/live-equity-market"
 NSE_HISTORY_URL = "https://www.nseindia.com/api/historical/cm/equity"
@@ -148,6 +163,17 @@ def fetch_batch_yf(
             df = df.rename(columns={"adj close": "adj_close"})
             df = df[["symbol", "date", "open", "high", "low", "close", "adj_close", "volume"]]
             df = df.dropna(subset=["close"])
+            # Drop zero-volume rows: Yahoo Finance carries forward the previous
+            # close with volume=0 on NSE holidays (e.g. Maharashtra Day).
+            zero_vol = (df["volume"] == 0) & (df["close"] == df["close"].shift(1))
+            if zero_vol.any():
+                n = zero_vol.sum()
+                dates_dropped = df.loc[zero_vol, "date"].dt.date.tolist()
+                print(f"  [{sym}] dropping {n} zero-volume carry-forward row(s): {dates_dropped}")
+                df = df[~zero_vol]
+            if df.empty:
+                empty.append(sym)
+                continue
             frames.append(df)
         except KeyError:
             empty.append(sym)
@@ -159,27 +185,62 @@ def fetch_batch_yf(
 def fetch_all_yf(
     tickers: list[str], start: date, end: date
 ) -> tuple[pd.DataFrame, list[str]]:
-    """Fetch all tickers in batches of BATCH_SIZE with randomised inter-batch sleep.
+    """Fetch all tickers for [start, end], splitting into YF_CHUNK_WEEKS-sized date windows.
+
+    Yahoo Finance rate-limits aggressively on large date ranges (e.g. 52 weeks).
+    Splitting into ~12-week chunks keeps each request below the trigger threshold.
+    Symbols are only marked as 'empty' if they returned no data across ALL chunks.
 
     Returns:
         tuple[combined_df, empty_symbols] where empty_symbols is the list of
-        symbols that returned no data from yfinance.
+        symbols that returned no data from yfinance across the entire window.
     """
-    all_frames: list[pd.DataFrame] = []
-    all_empty: list[str] = []
+    # Build date chunks: [start, start+chunk), [start+chunk, start+2*chunk), …
+    chunks: list[tuple[date, date]] = []
+    cursor = start
+    chunk_delta = timedelta(weeks=YF_CHUNK_WEEKS)
+    while cursor <= end:
+        chunk_end = min(cursor + chunk_delta - timedelta(days=1), end)
+        chunks.append((cursor, chunk_end))
+        cursor = chunk_end + timedelta(days=1)
 
-    for i in range(0, len(tickers), BATCH_SIZE):
-        batch = tickers[i : i + BATCH_SIZE]
-        df, empty = fetch_batch_yf(batch, start, end)
+    multi_chunk = len(chunks) > 1
+    if multi_chunk:
+        print(f"  Date range spans {(end - start).days} days → split into "
+              f"{len(chunks)} chunks of ≤{YF_CHUNK_WEEKS} weeks "
+              f"(inter-batch sleep {SLEEP_HIST_MIN_S:.0f}–{SLEEP_HIST_MAX_S:.0f}s, "
+              f"inter-chunk sleep {SLEEP_INTER_CHUNK_S:.0f}s).")
 
-        if not df.empty:
-            all_frames.append(df)
-        all_empty.extend(empty)
+    all_frames:     list[pd.DataFrame] = []
+    symbols_seen:   set[str] = set()
+    all_tickers_set = {t.replace(".NS", "") for t in tickers}
 
-        if i + BATCH_SIZE < len(tickers):
-            sleep_s = random.uniform(SLEEP_MIN_S, SLEEP_MAX_S)
-            time.sleep(sleep_s)
+    for chunk_idx, (c_start, c_end) in enumerate(chunks, 1):
+        if multi_chunk:
+            print(f"  Chunk {chunk_idx}/{len(chunks)}: {c_start} → {c_end}")
 
+        for i in range(0, len(tickers), BATCH_SIZE):
+            batch = tickers[i : i + BATCH_SIZE]
+            df, _empty = fetch_batch_yf(batch, c_start, c_end)
+
+            if not df.empty:
+                all_frames.append(df)
+                symbols_seen.update(df["symbol"].unique())
+
+            if i + BATCH_SIZE < len(tickers):
+                # Use longer sleep for multi-chunk (large history) runs to stay under rate limits.
+                if multi_chunk:
+                    sleep_s = random.uniform(SLEEP_HIST_MIN_S, SLEEP_HIST_MAX_S)
+                else:
+                    sleep_s = random.uniform(SLEEP_MIN_S, SLEEP_MAX_S)
+                time.sleep(sleep_s)
+
+        # Fixed inter-chunk sleep — gives Yahoo Finance time to reset the rate counter.
+        if chunk_idx < len(chunks):
+            print(f"  Waiting {SLEEP_INTER_CHUNK_S:.0f}s before next chunk…")
+            time.sleep(SLEEP_INTER_CHUNK_S)
+
+    all_empty = sorted(all_tickers_set - symbols_seen)
     combined = pd.concat(all_frames, ignore_index=True) if all_frames else pd.DataFrame()
     return combined, all_empty
 
@@ -214,6 +275,8 @@ def _start_nse_session() -> bool:
                 "--disable-blink-features=AutomationControlled",
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
+                # Force HTTP/1.1 — NSE Akamai sometimes resets HTTP/2 connections.
+                "--disable-http2",
             ],
         )
         ctx = browser.new_context(
@@ -236,19 +299,21 @@ def _start_nse_session() -> bool:
         page = ctx.new_page()
 
         print("  Opening NSE session for fallback fetches (this may take ~30s)…")
-        # NSE sometimes aborts HTTP/2 — retry up to 3 times with backoff.
-        for attempt in range(3):
+        # NSE / Akamai can abort connections — retry up to 5 times with backoff.
+        max_nav_attempts = 5
+        for attempt in range(max_nav_attempts):
             try:
                 page.goto(NSE_MARKET_URL, wait_until="domcontentloaded", timeout=90_000)
-                break
+                break   # success
             except Exception:
                 try:
                     page.goto(NSE_MARKET_URL, wait_until="load", timeout=90_000)
-                    break
+                    break   # success on fallback wait_until
                 except Exception as nav_err:
-                    if attempt < 2:
-                        wait_s = 10 * (attempt + 1)
-                        print(f"  NSE navigation failed (attempt {attempt+1}/3), retrying in {wait_s}s…")
+                    if attempt < max_nav_attempts - 1:
+                        wait_s = 15 * (attempt + 1)   # 15s, 30s, 45s, 60s
+                        print(f"  NSE navigation failed (attempt {attempt+1}/{max_nav_attempts}), "
+                              f"retrying in {wait_s}s…")
                         time.sleep(wait_s)
                     else:
                         raise nav_err
@@ -470,11 +535,28 @@ def main() -> None:
     only rows newer than the last date in daily_adj_close.csv.
     Exits with code 1 if more than FAILURE_THRESHOLD_PCT of symbols return no data
     from any source.
+
+    Flags:
+      --limit N    Only fetch the first N symbols (for testing).
+      --dry-run    Fetch and report but do not write any files.
     """
+    parser = argparse.ArgumentParser(description="Fetch NSE prices for Nifty 250")
+    parser.add_argument("--limit",   type=int, default=None,
+                        help="Only process the first N symbols (testing)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Fetch but do not write output files")
+    args = parser.parse_args()
+
     PRICES_DIR.mkdir(parents=True, exist_ok=True)
 
     tickers = load_symbols()
     meta    = load_symbol_meta()
+
+    if args.limit:
+        tickers = tickers[: args.limit]
+        meta    = {k: v for k, v in meta.items() if k + ".NS" in tickers or k in [t.replace(".NS","") for t in tickers]}
+        print(f"[--limit {args.limit}] Testing with first {len(tickers)} symbols only.")
+
     total   = len(tickers)
     print(f"Universe: {total} symbols")
 
@@ -545,25 +627,31 @@ def main() -> None:
               f"{sorted(all_missing)[:20]}" + (" …" if len(all_missing) > 20 else ""))
 
     # ── write outputs ─────────────────────────────────────────────────────────
-    weekly_out = PRICES_DIR / f"{week_str}.csv"
-    if not weekly_out.exists():
-        week_start = today - timedelta(days=today.weekday())
-        week_df = df[pd.to_datetime(df["date"]).dt.date >= week_start]
-        if not week_df.empty:
-            write_weekly_snapshot(week_df, week_str)
-        else:
-            print(f"WARNING: No data for current week {week_str} — snapshot not written.")
+    if args.dry_run:
+        print("\n[--dry-run] Skipping file writes.")
+        print(f"  Would write: {PRICES_DIR}/{week_str}.csv  ({len(df)} rows for current week)")
+        print(f"  Would update: {DAILY_FILE}")
     else:
-        print(f"Weekly snapshot {week_str}.csv already exists — skipping.")
+        weekly_out = PRICES_DIR / f"{week_str}.csv"
+        if not weekly_out.exists():
+            week_start = today - timedelta(days=today.weekday())
+            week_df = df[pd.to_datetime(df["date"]).dt.date >= week_start]
+            if not week_df.empty:
+                write_weekly_snapshot(week_df, week_str)
+            else:
+                print(f"WARNING: No data for current week {week_str} — snapshot not written.")
+        else:
+            print(f"Weekly snapshot {week_str}.csv already exists — skipping.")
 
-    update_daily_file(df)
+        update_daily_file(df)
 
     # ── summary ───────────────────────────────────────────────────────────────
     symbols_fetched = len(df["symbol"].unique())
-    yf_symbols = set(df_yf["symbol"].unique()) if not df_yf.empty else set()
+    yf_symbols  = set(df_yf["symbol"].unique())  if not df_yf.empty  else set()
     nse_symbols = set(df_nse["symbol"].unique()) if not df_nse.empty else set()
+    dry_tag = " [dry-run, no files written]" if args.dry_run else ""
     print(
-        f"\nDone. {symbols_fetched}/{total} symbols fetched "
+        f"\nDone{dry_tag}. {symbols_fetched}/{total} symbols fetched "
         f"(yfinance: {len(yf_symbols)}, NSE fallback: {len(nse_symbols)}, "
         f"missing: {len(all_missing)})"
     )
