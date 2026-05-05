@@ -7,10 +7,18 @@ Writes:
 On first run, pulls HISTORY_WEEKS of history for the daily file.
 On subsequent runs, appends only rows newer than the last date already present.
 The daily file is never trimmed — scripts that read it filter by date window.
+
+Data sources (tried in order):
+  1. PRIMARY  : yfinance batch download (50 symbols/call) with exponential backoff
+  2. SECONDARY: NSE equity historical API via Playwright browser session
+                (same approach as fetch_universe.py — bypasses Akamai)
+  3. FINAL    : symbols that fail both sources are logged; session aborts only
+                if failures exceed FAILURE_THRESHOLD_PCT of the universe.
 """
 
 from __future__ import annotations
 
+import json
 import random
 import sys
 import time
@@ -28,11 +36,21 @@ UNIVERSE_FILE = DATA_DIR / "universe.csv"
 DAILY_FILE = PRICES_DIR / "daily_adj_close.csv"
 
 BATCH_SIZE = 50               # symbols per yf.download call
-FAILURE_THRESHOLD_PCT = 0.08  # abort if more than this fraction of symbols return no data
+FAILURE_THRESHOLD_PCT = 0.08  # abort if > this fraction return no data from ANY source
 HISTORY_WEEKS = 52            # weeks of history pulled on first run
-SLEEP_MIN_S = 3.0             # minimum random sleep between batches (seconds)
-SLEEP_MAX_S = 10.0            # maximum random sleep between batches (seconds)
+SLEEP_MIN_S = 3.0             # min random sleep between yfinance batches
+SLEEP_MAX_S = 10.0            # max random sleep between yfinance batches
 
+# Retry config for yfinance rate-limit errors
+YF_MAX_RETRIES = 3
+YF_RETRY_BASE_S = 30.0        # first retry after 30s; doubles each time
+
+NSE_MARKET_URL = "https://www.nseindia.com/market-data/live-equity-market"
+NSE_HISTORY_URL = "https://www.nseindia.com/api/historical/cm/equity"
+NSE_BATCH_SLEEP_S = 0.8       # sleep between NSE API calls (per symbol)
+
+
+# ── helpers ──────────────────────────────────────────────────────────────────
 
 def iso_week_str(d: date) -> str:
     """Return an ISO year-week string (e.g. '2026-18') for date *d*."""
@@ -41,8 +59,10 @@ def iso_week_str(d: date) -> str:
 
 
 def load_symbols() -> list[str]:
-    """Read data/universe.csv and return a list of Yahoo Finance tickers (symbol + '.NS').
+    """Read data/universe.csv and return (nse_tickers, symbol_list).
 
+    nse_tickers: list of '.NS' tickers for yfinance
+    Returns the plain symbol list.
     Exits with code 1 if the universe file is missing.
     """
     if not UNIVERSE_FILE.exists():
@@ -56,18 +76,36 @@ def load_symbols() -> list[str]:
         sys.exit(1)
 
 
-def fetch_batch(tickers: list[str], start: date, end: date) -> pd.DataFrame:
-    """Download OHLCV for a batch of Yahoo tickers over the date range [start, end].
+def load_symbol_meta() -> dict[str, str]:
+    """Return {symbol: series} from universe.csv (used for NSE API calls)."""
+    try:
+        df = pd.read_csv(UNIVERSE_FILE)
+        return dict(zip(df["symbol"].str.strip(), df["series"].str.strip()))
+    except Exception:
+        return {}
+
+
+# ── SOURCE 1: yfinance ────────────────────────────────────────────────────────
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    """Return True if *exc* is a Yahoo Finance rate-limit error."""
+    msg = str(exc).lower()
+    return "ratelimit" in msg or "too many requests" in msg or "429" in msg
+
+
+def fetch_batch_yf(
+    tickers: list[str], start: date, end: date, attempt: int = 0
+) -> tuple[pd.DataFrame, list[str]]:
+    """Download OHLCV for a batch of Yahoo tickers, with retry on rate-limit.
 
     Args:
         tickers: List of Yahoo Finance ticker strings (e.g. ['RELIANCE.NS', ...]).
         start:   First date to fetch (inclusive).
-        end:     Last date to fetch (inclusive; one day is added internally).
+        end:     Last date to fetch (inclusive; +1 day added internally).
+        attempt: Current retry count (0 = first try).
 
     Returns:
-        Long-format DataFrame with columns [symbol, date, open, high, low, close,
-        adj_close, volume]. Returns an empty DataFrame if yfinance fails or no
-        data is returned for the batch.
+        (DataFrame with OHLCV rows, list of empty symbols from this batch).
     """
     try:
         raw = yf.download(
@@ -80,75 +118,283 @@ def fetch_batch(tickers: list[str], start: date, end: date) -> pd.DataFrame:
             threads=False,
         )
     except Exception as e:
-        # yfinance raises varied undocumented exceptions depending on Yahoo's
-        # API version. Treat any failure as a recoverable batch miss.
+        if _is_rate_limit_error(e) and attempt < YF_MAX_RETRIES:
+            wait_s = YF_RETRY_BASE_S * (2 ** attempt)
+            print(
+                f"  yfinance rate-limited (batch starting {tickers[0].replace('.NS','')}). "
+                f"Retry {attempt+1}/{YF_MAX_RETRIES} in {wait_s:.0f}s…"
+            )
+            time.sleep(wait_s)
+            return fetch_batch_yf(tickers, start, end, attempt + 1)
         print(f"  WARNING: yf.download failed for batch starting {tickers[0]}: {e}")
-        return pd.DataFrame()
+        return pd.DataFrame(), [t.replace(".NS", "") for t in tickers]
 
     if raw is None or (hasattr(raw, "empty") and raw.empty):
-        return pd.DataFrame()
+        return pd.DataFrame(), [t.replace(".NS", "") for t in tickers]
 
     frames: list[pd.DataFrame] = []
+    empty: list[str] = []
+
     for ticker in tickers:
+        sym = ticker.replace(".NS", "")
         try:
             df = raw[ticker].copy() if len(tickers) > 1 else raw.copy()
             if df.empty or df["Close"].isna().all():
+                empty.append(sym)
                 continue
             df = df.reset_index()
             df.columns = [str(c).lower() for c in df.columns]
-            df["symbol"] = ticker.replace(".NS", "")
+            df["symbol"] = sym
             df = df.rename(columns={"adj close": "adj_close"})
             df = df[["symbol", "date", "open", "high", "low", "close", "adj_close", "volume"]]
             df = df.dropna(subset=["close"])
             frames.append(df)
         except KeyError:
-            # Ticker absent in the multi-ticker download response.
-            continue
+            empty.append(sym)
 
-    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return combined, empty
 
 
-def fetch_all(
+def fetch_all_yf(
     tickers: list[str], start: date, end: date
 ) -> tuple[pd.DataFrame, list[str]]:
     """Fetch all tickers in batches of BATCH_SIZE with randomised inter-batch sleep.
 
-    Args:
-        tickers: Full list of Yahoo Finance ticker strings.
-        start:   Start date for the fetch window.
-        end:     End date for the fetch window.
-
     Returns:
-        tuple[combined_df, empty_tickers] where *empty_tickers* is the list of
-        symbols that returned no data.
+        tuple[combined_df, empty_symbols] where empty_symbols is the list of
+        symbols that returned no data from yfinance.
     """
     all_frames: list[pd.DataFrame] = []
-    empty_tickers: list[str] = []
+    all_empty: list[str] = []
 
     for i in range(0, len(tickers), BATCH_SIZE):
         batch = tickers[i : i + BATCH_SIZE]
-        df = fetch_batch(batch, start, end)
-
-        batch_syms = {t.replace(".NS", "") for t in batch}
-        fetched_syms = set(df["symbol"].unique()) if not df.empty else set()
-        empty_tickers.extend(batch_syms - fetched_syms)
+        df, empty = fetch_batch_yf(batch, start, end)
 
         if not df.empty:
             all_frames.append(df)
+        all_empty.extend(empty)
 
-        # Sleep between batches to respect Yahoo Finance rate limits.
         if i + BATCH_SIZE < len(tickers):
             sleep_s = random.uniform(SLEEP_MIN_S, SLEEP_MAX_S)
             time.sleep(sleep_s)
 
     combined = pd.concat(all_frames, ignore_index=True) if all_frames else pd.DataFrame()
-    return combined, empty_tickers
+    return combined, all_empty
 
+
+# ── SOURCE 2: NSE via Playwright session ──────────────────────────────────────
+
+_nse_page: object | None = None          # playwright Page, kept open for batch use
+_nse_browser: object | None = None
+
+
+def _start_nse_session() -> bool:
+    """Open a Playwright Chromium browser session on NSE to acquire Akamai cookies.
+
+    The browser stays open so we can make multiple /api calls without re-launching.
+    Returns True on success, False if Playwright is not installed or navigation fails.
+    """
+    global _nse_page, _nse_browser
+
+    try:
+        from playwright.sync_api import sync_playwright as _sync_playwright  # noqa: F401
+    except ImportError:
+        print("  NSE fallback unavailable: playwright not installed.")
+        return False
+
+    from playwright.sync_api import sync_playwright
+
+    try:
+        pw = sync_playwright().start()
+        browser = pw.chromium.launch(
+            headless=True,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+            ],
+        )
+        ctx = browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            locale="en-US",
+            timezone_id="Asia/Kolkata",
+            viewport={"width": 1366, "height": 768},
+            extra_http_headers={
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+            },
+        )
+        ctx.add_init_script(
+            "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"
+        )
+        page = ctx.new_page()
+
+        print("  Opening NSE session for fallback fetches (this may take ~30s)…")
+        # NSE sometimes aborts HTTP/2 — retry up to 3 times with backoff.
+        for attempt in range(3):
+            try:
+                page.goto(NSE_MARKET_URL, wait_until="domcontentloaded", timeout=90_000)
+                break
+            except Exception:
+                try:
+                    page.goto(NSE_MARKET_URL, wait_until="load", timeout=90_000)
+                    break
+                except Exception as nav_err:
+                    if attempt < 2:
+                        wait_s = 10 * (attempt + 1)
+                        print(f"  NSE navigation failed (attempt {attempt+1}/3), retrying in {wait_s}s…")
+                        time.sleep(wait_s)
+                    else:
+                        raise nav_err
+        page.wait_for_timeout(3000)
+
+        _nse_page = page
+        _nse_browser = browser
+        print("  NSE session ready.")
+        return True
+    except Exception as e:
+        print(f"  WARNING: Could not start NSE Playwright session: {e}")
+        return False
+
+
+def _close_nse_session() -> None:
+    """Close the Playwright browser if it is open."""
+    global _nse_page, _nse_browser
+    try:
+        if _nse_browser is not None:
+            _nse_browser.close()   # type: ignore[union-attr]
+    except Exception:
+        pass
+    _nse_page = None
+    _nse_browser = None
+
+
+def fetch_symbol_nse(symbol: str, start: date, end: date, series: str = "EQ") -> pd.DataFrame:
+    """Fetch historical OHLCV for a single symbol via the NSE equity history API.
+
+    Requires an active NSE Playwright session (_nse_page must be set).
+    The API returns OHLCV rows for all trading days in [start, end].
+
+    Args:
+        symbol: NSE symbol string (e.g. 'RELIANCE').
+        start:  First date (inclusive).
+        end:    Last date (inclusive).
+        series: Market series, almost always 'EQ'.
+
+    Returns:
+        DataFrame with columns [symbol, date, open, high, low, close, adj_close, volume],
+        or empty DataFrame on failure.
+    """
+    if _nse_page is None:
+        return pd.DataFrame()
+
+    from_dt = start.strftime("%d-%m-%Y")
+    to_dt   = end.strftime("%d-%m-%Y")
+    series_enc = series.replace('"', '\\"')
+
+    js = f"""() => {{
+        return fetch('/api/historical/cm/equity?symbol={symbol}&series=[%22{series_enc}%22]&from={from_dt}&to={to_dt}', {{
+            credentials: 'include',
+            headers: {{'Accept': 'application/json, text/plain, */*'}}
+        }})
+        .then(r => r.json())
+        .then(d => JSON.stringify(d.data || []))
+        .catch(e => JSON.stringify({{error: String(e)}}));
+    }}"""
+
+    try:
+        raw = _nse_page.evaluate(js)  # type: ignore[union-attr]
+        parsed = json.loads(raw)
+    except Exception as e:
+        return pd.DataFrame()
+
+    if isinstance(parsed, dict) and "error" in parsed:
+        return pd.DataFrame()
+
+    rows = []
+    for d in parsed:
+        try:
+            rows.append({
+                "symbol":    symbol,
+                "date":      pd.to_datetime(
+                    d.get("CH_TIMESTAMP") or d.get("mTIMESTAMP", ""),
+                    dayfirst=True,
+                ),
+                "open":      float(d.get("CH_OPENING_PRICE") or 0),
+                "high":      float(d.get("CH_TRADE_HIGH_PRICE") or 0),
+                "low":       float(d.get("CH_TRADE_LOW_PRICE") or 0),
+                "close":     float(d.get("CH_CLOSING_PRICE") or 0),
+                "adj_close": float(d.get("CH_CLOSING_PRICE") or 0),  # NSE doesn't adjust
+                "volume":    int(d.get("CH_TOT_TRADED_QTY") or 0),
+            })
+        except (TypeError, ValueError):
+            continue
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df = df.dropna(subset=["date", "close"])
+    df = df[df["close"] > 0]
+    df["date"] = pd.to_datetime(df["date"])
+    return df
+
+
+def fetch_failed_via_nse(
+    symbols: list[str], start: date, end: date, meta: dict[str, str]
+) -> tuple[pd.DataFrame, list[str]]:
+    """Fetch a list of symbols that failed yfinance via the NSE historical API.
+
+    Args:
+        symbols: Plain NSE symbols (without .NS) that need recovery.
+        start:   Fetch window start.
+        end:     Fetch window end.
+        meta:    Dict {symbol: series} from universe.csv.
+
+    Returns:
+        (recovered_df, still_missing_symbols)
+    """
+    if not symbols:
+        return pd.DataFrame(), []
+
+    print(f"\n  NSE fallback: recovering {len(symbols)} symbols…")
+    if not _start_nse_session():
+        return pd.DataFrame(), symbols
+
+    frames: list[pd.DataFrame] = []
+    still_missing: list[str] = []
+
+    for i, sym in enumerate(symbols, 1):
+        series = meta.get(sym, "EQ")
+        df = fetch_symbol_nse(sym, start, end, series)
+        if df.empty:
+            still_missing.append(sym)
+        else:
+            frames.append(df)
+        if i % 10 == 0:
+            print(f"    NSE fallback progress: {i}/{len(symbols)} ({len(frames)} recovered)")
+        time.sleep(NSE_BATCH_SLEEP_S)
+
+    _close_nse_session()
+
+    print(f"  NSE fallback complete: recovered {len(frames)} symbols, "
+          f"{len(still_missing)} still missing.")
+
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return combined, still_missing
+
+
+# ── output writers ────────────────────────────────────────────────────────────
 
 def write_weekly_snapshot(df: pd.DataFrame, week_str: str) -> None:
     """Write the current-week OHLCV snapshot CSV.
 
-    No-ops if the file already exists to preserve immutability of weekly snapshots.
+    No-ops if the file already exists to preserve immutability.
     Exits with code 1 on write failure.
     """
     out = PRICES_DIR / f"{week_str}.csv"
@@ -166,12 +412,10 @@ def write_weekly_snapshot(df: pd.DataFrame, week_str: str) -> None:
 def update_daily_file(df: pd.DataFrame) -> None:
     """Append new rows to the cumulative daily adj_close wide-format CSV.
 
-    The file uses dates as the row index and symbols as columns. It is
-    append-only — historical rows are never removed.
-
+    The file uses dates as the row index and symbols as columns.
+    Append-only — historical rows are never removed.
     Exits with code 1 on read or write failure (the daily file is critical).
     """
-    # Pivot to wide format: index=date, columns=symbol, values=adj_close.
     adj = df[["symbol", "date", "adj_close"]].copy()
     adj["date"] = pd.to_datetime(adj["date"]).dt.date
     pivot = adj.pivot_table(index="date", columns="symbol", values="adj_close")
@@ -217,23 +461,27 @@ def update_daily_file(df: pd.DataFrame) -> None:
             sys.exit(1)
 
 
+# ── main ──────────────────────────────────────────────────────────────────────
+
 def main() -> None:
     """Fetch prices for all Nifty 250 symbols and write OHLCV + daily adj_close files.
 
     On first run pulls HISTORY_WEEKS of daily history. On subsequent runs appends
     only rows newer than the last date in daily_adj_close.csv.
-    Exits with code 1 if more than FAILURE_THRESHOLD_PCT of symbols return no data.
+    Exits with code 1 if more than FAILURE_THRESHOLD_PCT of symbols return no data
+    from any source.
     """
     PRICES_DIR.mkdir(parents=True, exist_ok=True)
 
     tickers = load_symbols()
-    total = len(tickers)
+    meta    = load_symbol_meta()
+    total   = len(tickers)
     print(f"Universe: {total} symbols")
 
-    today = date.today()
+    today    = date.today()
     week_str = iso_week_str(today)
 
-    # --- Determine fetch window ----------------------------------------------
+    # ── determine fetch window ────────────────────────────────────────────────
     if DAILY_FILE.exists():
         try:
             existing_daily = pd.read_csv(DAILY_FILE, index_col=0, parse_dates=True)
@@ -251,28 +499,52 @@ def main() -> None:
         print("Already up to date.")
         return
 
-    # --- Fetch ---------------------------------------------------------------
-    print(f"Fetching data for {total} symbols in batches of {BATCH_SIZE}...")
-    df, empty = fetch_all(tickers, start, today)
+    # ── SOURCE 1: yfinance ────────────────────────────────────────────────────
+    print(f"\nFetching prices via yfinance (batches of {BATCH_SIZE})…")
+    df_yf, yf_empty = fetch_all_yf(tickers, start, today)
+
+    yf_got     = len(df_yf["symbol"].unique()) if not df_yf.empty else 0
+    yf_missing = len(yf_empty)
+    print(f"yfinance: {yf_got} succeeded, {yf_missing} failed")
+    if yf_empty:
+        print(f"  yfinance failures: {sorted(yf_empty)[:20]}"
+              + (" …" if len(yf_empty) > 20 else ""))
+
+    # ── SOURCE 2: NSE fallback for yfinance failures ──────────────────────────
+    df_nse = pd.DataFrame()
+    nse_still_missing: list[str] = []
+
+    if yf_empty:
+        df_nse, nse_still_missing = fetch_failed_via_nse(yf_empty, start, today, meta)
+        nse_got = len(df_nse["symbol"].unique()) if not df_nse.empty else 0
+        print(f"NSE fallback: {nse_got} recovered, {len(nse_still_missing)} still missing")
+
+    # ── combine results ───────────────────────────────────────────────────────
+    frames = [f for f in [df_yf, df_nse] if not f.empty]
+    df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+    all_missing = nse_still_missing if yf_empty else []
 
     if df.empty:
-        print("ERROR: No data returned for any symbol. Check yfinance / network connectivity.")
+        print("ERROR: No data returned for any symbol from any source. "
+              "Check network connectivity.")
         sys.exit(1)
 
-    empty_pct = len(empty) / total
-    if empty_pct > FAILURE_THRESHOLD_PCT:
+    # ── failure threshold check ───────────────────────────────────────────────
+    missing_pct = len(all_missing) / total
+    if missing_pct > FAILURE_THRESHOLD_PCT:
         print(
-            f"ERROR: {len(empty)}/{total} ({empty_pct:.1%}) symbols returned no data — "
-            f"above the {FAILURE_THRESHOLD_PCT:.0%} abort threshold."
+            f"ERROR: {len(all_missing)}/{total} ({missing_pct:.1%}) symbols returned no data "
+            f"from any source — above the {FAILURE_THRESHOLD_PCT:.0%} abort threshold."
         )
-        print(f"  First 20 empty symbols: {sorted(empty)[:20]}")
+        print(f"  First 20 missing: {sorted(all_missing)[:20]}")
         sys.exit(1)
 
-    if empty:
-        print(f"WARNING: {len(empty)} symbols returned no data: {sorted(empty)}")
+    if all_missing:
+        print(f"WARNING: {len(all_missing)} symbols missing from all sources: "
+              f"{sorted(all_missing)[:20]}" + (" …" if len(all_missing) > 20 else ""))
 
-    # --- Write outputs -------------------------------------------------------
-    # Weekly snapshot: only include rows from the current ISO week.
+    # ── write outputs ─────────────────────────────────────────────────────────
     weekly_out = PRICES_DIR / f"{week_str}.csv"
     if not weekly_out.exists():
         week_start = today - timedelta(days=today.weekday())
@@ -285,7 +557,18 @@ def main() -> None:
         print(f"Weekly snapshot {week_str}.csv already exists — skipping.")
 
     update_daily_file(df)
-    print(f"Done. Fetched data for {len(df['symbol'].unique())} symbols.")
+
+    # ── summary ───────────────────────────────────────────────────────────────
+    symbols_fetched = len(df["symbol"].unique())
+    yf_symbols = set(df_yf["symbol"].unique()) if not df_yf.empty else set()
+    nse_symbols = set(df_nse["symbol"].unique()) if not df_nse.empty else set()
+    print(
+        f"\nDone. {symbols_fetched}/{total} symbols fetched "
+        f"(yfinance: {len(yf_symbols)}, NSE fallback: {len(nse_symbols)}, "
+        f"missing: {len(all_missing)})"
+    )
+    if all_missing:
+        print(f"Missing symbols: {sorted(all_missing)}")
 
 
 if __name__ == "__main__":
