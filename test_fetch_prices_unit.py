@@ -173,21 +173,83 @@ with patch("scripts.fetch_prices.yf") as mock_yf, \
            mock_sleep.call_args_list[0] == call(fp.YF_RETRY_BASE_S * (2 ** 0)),
            f"{mock_sleep.call_args_list[0]}")
 
-# 2c: exhausts all retries → returns empty
+# 2c: exhausts all retries → auto-falls-back to Ticker.history() (v8 endpoint)
 with patch("scripts.fetch_prices.yf") as mock_yf, \
-     patch("scripts.fetch_prices.time.sleep"):
+     patch("scripts.fetch_prices.time.sleep"), \
+     patch("scripts.fetch_prices._fetch_batch_via_history") as mock_hist:
     mock_yf.__version__ = "0.2.54"
     mock_yf.download.side_effect = Exception("Too Many Requests. Rate limited.")
+    mock_hist.return_value = (_make_ohlcv("RELIANCE", 5), [])
     df, empty = fp.fetch_batch_yf(["RELIANCE.NS"], START, END)
-    record("yf exhausted retries: empty DataFrame returned",
-           df.empty, "3 retries used up")
-    record("yf exhausted retries: symbol in empty list",
-           "RELIANCE" in empty)
-    record("yf exhausted retries: download called 1+MAX_RETRIES times",
+    record("yf retries exhausted: auto-falls-back to Ticker.history()",
+           mock_hist.called, f"history fallback called={mock_hist.called}")
+    record("yf retries exhausted: data returned from history fallback",
+           len(df) > 0 and empty == [], f"{len(df)} rows")
+    record("yf retries exhausted: download called 1+MAX_RETRIES times",
            mock_yf.download.call_count == 1 + fp.YF_MAX_RETRIES,
            f"calls={mock_yf.download.call_count}")
 
-# 2d: fetch_all_yf batches correctly
+# 2c2b: yf.download returns EMPTY (rate-limit silent path) → canary confirms v8 works → block v7
+with patch("scripts.fetch_prices.yf") as mock_yf, \
+     patch("scripts.fetch_prices._fetch_ticker_history") as mock_canary, \
+     patch("scripts.fetch_prices._fetch_batch_via_history") as mock_hist, \
+     patch("scripts.fetch_prices.time.sleep"):
+    mock_yf.__version__ = "0.2.54"
+    mock_yf.download.return_value = pd.DataFrame()   # silent empty (rate-limit)
+    mock_canary.return_value = _make_ohlcv("RELIANCE", 3)   # v8 has data
+    mock_hist.return_value = (_make_ohlcv("RELIANCE", 3), [])
+    fp._yf_v7_blocked = False
+    df_sl, _ = fp.fetch_batch_yf(["RELIANCE.NS"], START, END)
+    record("silent rate-limit: canary check triggers v8 fallback",
+           mock_canary.called and mock_hist.called,
+           f"canary={mock_canary.called} hist={mock_hist.called}")
+    record("silent rate-limit: _yf_v7_blocked flag set",
+           fp._yf_v7_blocked)
+    fp._yf_v7_blocked = False  # reset
+
+# 2c3: once _yf_v7_blocked is set, subsequent batches skip v7 entirely
+with patch("scripts.fetch_prices.yf") as mock_yf, \
+     patch("scripts.fetch_prices._fetch_batch_via_history") as mock_hist, \
+     patch("scripts.fetch_prices.time.sleep"):
+    mock_yf.__version__ = "0.2.54"
+    mock_yf.download.side_effect = Exception("Too Many Requests. Rate limited.")
+    mock_hist.return_value = (_make_ohlcv("TCS", 5), [])
+    fp._yf_v7_blocked = True          # pre-set the flag (simulates prior batch exhausting retries)
+    fp.fetch_batch_yf(["TCS.NS"], START, END)
+    fp._yf_v7_blocked = False         # reset
+    record("_yf_v7_blocked: skips yf.download entirely when flag is set",
+           mock_yf.download.call_count == 0, f"download calls={mock_yf.download.call_count}")
+    record("_yf_v7_blocked: goes straight to history fallback",
+           mock_hist.called)
+
+# 2c3: _fetch_batch_via_history calls _fetch_ticker_history per symbol
+with patch("scripts.fetch_prices._fetch_ticker_history") as mock_th, \
+     patch("scripts.fetch_prices.time.sleep"):
+    mock_th.side_effect = lambda t, *a, **kw: _make_ohlcv(t.replace(".NS",""), 5)
+    df_h, empty_h = fp._fetch_batch_via_history(["RELIANCE.NS","TCS.NS"], START, END)
+    record("_fetch_batch_via_history: calls _fetch_ticker_history per symbol",
+           mock_th.call_count == 2, f"calls={mock_th.call_count}")
+    record("_fetch_batch_via_history: combines results",
+           len(df_h["symbol"].unique()) == 2 and empty_h == [])
+
+# 2d: _normalise_ticker_df handles Ticker.history() timezone-aware index
+tz_df = pd.DataFrame({
+    "Open":   [100.0], "High": [105.0], "Low": [95.0],
+    "Close":  [102.0], "Volume": [1_000_000],
+    "Dividends": [0.0], "Stock Splits": [0.0],
+}, index=pd.DatetimeIndex(
+    [pd.Timestamp("2026-05-05", tz="Asia/Kolkata")], name="Date"
+))
+normed = fp._normalise_ticker_df(tz_df, "RELIANCE")
+record("_normalise_ticker_df: tz-aware index stripped",
+       not pd.api.types.is_datetime64tz_dtype(normed["date"]),
+       str(normed["date"].dtype))
+record("_normalise_ticker_df: adj_close filled from close when missing",
+       abs(normed["adj_close"].iloc[0] - 102.0) < 0.01)
+record("_normalise_ticker_df: symbol set correctly",
+       normed["symbol"].iloc[0] == "RELIANCE")
+
+# 2f: fetch_all_yf batches correctly
 with patch("scripts.fetch_prices.yf") as mock_yf, \
      patch("scripts.fetch_prices.time.sleep"):
     mock_yf.__version__ = "0.2.54"

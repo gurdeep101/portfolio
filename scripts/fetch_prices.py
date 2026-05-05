@@ -56,9 +56,12 @@ SLEEP_INTER_CHUNK_S = 60.0    # sleep between date chunks (fixed, not random)
 # Yahoo Finance rate-limits aggressively on 52-week single requests.
 YF_CHUNK_WEEKS = 12           # max weeks per single yf.download call
 
-# Retry config for yfinance rate-limit errors
-YF_MAX_RETRIES = 3
-YF_RETRY_BASE_S = 45.0        # first retry after 45s; doubles each time (45→90→180)
+# Retry config for yfinance rate-limit errors.
+# Only retry once (15s) to handle a brief transient throttle.
+# If v7 is truly blocked, one fast retry reveals that and the _yf_v7_blocked
+# flag flips, routing all remaining batches directly to Ticker.history().
+YF_MAX_RETRIES = 1
+YF_RETRY_BASE_S = 15.0        # retry once after 15s; if still blocked → v8 fallback
 
 NSE_MARKET_URL = "https://www.nseindia.com/market-data/live-equity-market"
 NSE_HISTORY_URL = "https://www.nseindia.com/api/historical/cm/equity"
@@ -108,10 +111,80 @@ def _is_rate_limit_error(exc: Exception) -> bool:
     return "ratelimit" in msg or "too many requests" in msg or "429" in msg
 
 
+def _normalise_ticker_df(raw_df: pd.DataFrame, sym: str) -> pd.DataFrame:
+    """Normalise a single-symbol OHLCV DataFrame (from either download or history).
+
+    Handles both yf.download() output (columns: Open/High/… or Adj Close) and
+    Ticker.history() output (columns: Open/High/… Capital-case, no Adj Close).
+
+    Returns a cleaned DataFrame with 8 standard columns, or empty on failure.
+    """
+    df = raw_df.reset_index()
+    df.columns = [str(c).lower() for c in df.columns]
+
+    # Ticker.history() uses 'dividends'/'stock splits'; also no 'adj close'.
+    # Map 'close' → 'adj_close' when 'adj close' is absent (history() path).
+    if "adj close" in df.columns:
+        df = df.rename(columns={"adj close": "adj_close"})
+    elif "adj_close" not in df.columns:
+        df["adj_close"] = df["close"]   # history() — use unadjusted close
+
+    # Normalise timezone-aware DatetimeIndex produced by history()
+    if "date" in df.columns and pd.api.types.is_datetime64tz_dtype(df["date"]):
+        df["date"] = df["date"].dt.tz_convert(None)
+
+    df["symbol"] = sym
+
+    needed = ["symbol", "date", "open", "high", "low", "close", "adj_close", "volume"]
+    missing = [c for c in needed if c not in df.columns]
+    if missing:
+        return pd.DataFrame()
+
+    df = df[needed].dropna(subset=["close"])
+
+    # Drop zero-volume carry-forward rows (Yahoo repeats prior close on NSE holidays).
+    zero_vol = (df["volume"] == 0) & (df["close"] == df["close"].shift(1))
+    if zero_vol.any():
+        dates_dropped = df.loc[zero_vol, "date"].dt.date.tolist()
+        print(f"  [{sym}] dropping {int(zero_vol.sum())} zero-volume "
+              f"carry-forward row(s): {dates_dropped}")
+        df = df[~zero_vol]
+
+    return df
+
+
+def _fetch_ticker_history(ticker: str, start: date, end: date) -> pd.DataFrame:
+    """Fetch a single ticker via yf.Ticker.history() (v8/chart endpoint).
+
+    This endpoint has an independent rate-limit quota from yf.download (v7).
+    Falls back to this when the batch download is rate-limited.
+    """
+    sym = ticker.replace(".NS", "")
+    try:
+        raw = yf.Ticker(ticker).history(
+            start=start.isoformat(),
+            end=(end + timedelta(days=1)).isoformat(),
+            auto_adjust=False,
+        )
+        if raw is None or raw.empty or raw["Close"].isna().all():
+            return pd.DataFrame()
+        return _normalise_ticker_df(raw, sym)
+    except Exception:
+        return pd.DataFrame()
+
+
 def fetch_batch_yf(
     tickers: list[str], start: date, end: date, attempt: int = 0
 ) -> tuple[pd.DataFrame, list[str]]:
-    """Download OHLCV for a batch of Yahoo tickers, with retry on rate-limit.
+    """Download OHLCV for a batch of Yahoo tickers.
+
+    Strategy (in order):
+      1. yf.download() — single call for the whole batch (fast, v7 endpoint).
+         Skipped immediately if _yf_v7_blocked is set (already confirmed blocked).
+      2. On YFRateLimitError: retry up to YF_MAX_RETRIES with exponential backoff.
+      3. After retries exhausted: set _yf_v7_blocked=True (skips v7 for all future
+         batches this session) then fall back to yf.Ticker.history() per symbol
+         (v8/chart endpoint — independent quota, not affected by v7 rate limits).
 
     Args:
         tickers: List of Yahoo Finance ticker strings (e.g. ['RELIANCE.NS', ...]).
@@ -120,8 +193,14 @@ def fetch_batch_yf(
         attempt: Current retry count (0 = first try).
 
     Returns:
-        (DataFrame with OHLCV rows, list of empty symbols from this batch).
+        (DataFrame with OHLCV rows, list of symbols with no data from this batch).
     """
+    global _yf_v7_blocked
+
+    # Skip v7 entirely if a previous batch already confirmed it's blocked.
+    if _yf_v7_blocked:
+        return _fetch_batch_via_history(tickers, start, end)
+
     try:
         raw = yf.download(
             tickers,
@@ -133,18 +212,42 @@ def fetch_batch_yf(
             threads=False,
         )
     except Exception as e:
-        if _is_rate_limit_error(e) and attempt < YF_MAX_RETRIES:
-            wait_s = YF_RETRY_BASE_S * (2 ** attempt)
-            print(
-                f"  yfinance rate-limited (batch starting {tickers[0].replace('.NS','')}). "
-                f"Retry {attempt+1}/{YF_MAX_RETRIES} in {wait_s:.0f}s…"
-            )
-            time.sleep(wait_s)
-            return fetch_batch_yf(tickers, start, end, attempt + 1)
-        print(f"  WARNING: yf.download failed for batch starting {tickers[0]}: {e}")
+        if _is_rate_limit_error(e):
+            if attempt < YF_MAX_RETRIES:
+                wait_s = YF_RETRY_BASE_S * (2 ** attempt)
+                print(
+                    f"  yfinance v7 rate-limited (batch {tickers[0].replace('.NS','')}…). "
+                    f"Retry {attempt+1}/{YF_MAX_RETRIES} in {wait_s:.0f}s…"
+                )
+                time.sleep(wait_s)
+                return fetch_batch_yf(tickers, start, end, attempt + 1)
+            else:
+                # Retries exhausted — block v7 for this entire session, then
+                # fall back to per-symbol Ticker.history() (v8/chart endpoint).
+                _yf_v7_blocked = True
+                print(
+                    f"  yfinance v7 retries exhausted. Switching ALL remaining batches "
+                    f"to Ticker.history() (v8 endpoint) for this session."
+                )
+                return _fetch_batch_via_history(tickers, start, end)
+        print(f"  WARNING: yf.download failed: {e}")
         return pd.DataFrame(), [t.replace(".NS", "") for t in tickers]
 
     if raw is None or (hasattr(raw, "empty") and raw.empty):
+        # yf.download silently returns empty on rate-limit (no exception raised).
+        # Distinguish "truly no data" (weekend/holiday) from rate-limit by checking
+        # one symbol via Ticker.history() (v8 endpoint, independent quota).
+        canary = tickers[0]
+        canary_df = _fetch_ticker_history(canary, start, end)
+        if not canary_df.empty:
+            # v8 has data → v7 is rate-limited. Block v7 and switch all batches to v8.
+            _yf_v7_blocked = True
+            print(
+                f"  yfinance v7 returned empty (rate-limited). "
+                f"Confirmed via Ticker.history(). Switching ALL batches to v8 endpoint."
+            )
+            return _fetch_batch_via_history(tickers, start, end)
+        # v8 also empty → genuinely no data (weekend/holiday window)
         return pd.DataFrame(), [t.replace(".NS", "") for t in tickers]
 
     frames: list[pd.DataFrame] = []
@@ -153,30 +256,42 @@ def fetch_batch_yf(
     for ticker in tickers:
         sym = ticker.replace(".NS", "")
         try:
-            df = raw[ticker].copy() if len(tickers) > 1 else raw.copy()
-            if df.empty or df["Close"].isna().all():
+            chunk = raw[ticker].copy() if len(tickers) > 1 else raw.copy()
+            if chunk.empty or chunk["Close"].isna().all():
                 empty.append(sym)
                 continue
-            df = df.reset_index()
-            df.columns = [str(c).lower() for c in df.columns]
-            df["symbol"] = sym
-            df = df.rename(columns={"adj close": "adj_close"})
-            df = df[["symbol", "date", "open", "high", "low", "close", "adj_close", "volume"]]
-            df = df.dropna(subset=["close"])
-            # Drop zero-volume rows: Yahoo Finance carries forward the previous
-            # close with volume=0 on NSE holidays (e.g. Maharashtra Day).
-            zero_vol = (df["volume"] == 0) & (df["close"] == df["close"].shift(1))
-            if zero_vol.any():
-                n = zero_vol.sum()
-                dates_dropped = df.loc[zero_vol, "date"].dt.date.tolist()
-                print(f"  [{sym}] dropping {n} zero-volume carry-forward row(s): {dates_dropped}")
-                df = df[~zero_vol]
+            df = _normalise_ticker_df(chunk, sym)
             if df.empty:
                 empty.append(sym)
-                continue
-            frames.append(df)
+            else:
+                frames.append(df)
         except KeyError:
             empty.append(sym)
+
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return combined, empty
+
+
+def _fetch_batch_via_history(
+    tickers: list[str], start: date, end: date
+) -> tuple[pd.DataFrame, list[str]]:
+    """Fetch each ticker individually via Ticker.history() (v8/chart endpoint).
+
+    Slower than batch download but uses an independent rate-limit quota.
+    Called automatically when yf.download() (v7) is rate-limited.
+    """
+    frames: list[pd.DataFrame] = []
+    empty:  list[str] = []
+
+    for ticker in tickers:
+        sym = ticker.replace(".NS", "")
+        df = _fetch_ticker_history(ticker, start, end)
+        if df.empty:
+            empty.append(sym)
+        else:
+            frames.append(df)
+        # Small sleep to respect v8 rate limits too
+        time.sleep(0.5)
 
     combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     return combined, empty
@@ -249,6 +364,10 @@ def fetch_all_yf(
 
 _nse_page: object | None = None          # playwright Page, kept open for batch use
 _nse_browser: object | None = None
+
+# Once yf.download (v7) is confirmed rate-limited this session, flip this flag so
+# all subsequent batches skip straight to Ticker.history() without waiting.
+_yf_v7_blocked: bool = False
 
 
 def _start_nse_session() -> bool:
