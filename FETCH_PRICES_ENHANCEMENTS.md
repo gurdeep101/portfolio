@@ -748,6 +748,52 @@ Watch session logs for these patterns:
 - `fetch_fundamentals.py` — Uses yfinance `.info` (separate endpoint, separate quota)
 - `validate_data.py` — Validates the OHLCV files written by this script
 - `compute_metrics.py` — Consumes `daily_adj_close.csv` produced by this script
+- `fetch_nsepy_price.py` — Drop-in alternative with inverted source priority (see below)
+
+---
+
+## Alternative: `fetch_nsepy_price.py`
+
+A fully independent script that produces the same output files (`data/prices/YYYY-WW.csv`
+and `data/prices/daily_adj_close.csv`) using NSE-native Python libraries as the primary
+data source rather than yfinance.
+
+### Source priority
+
+| Tier | Script: `fetch_prices.py` | Script: `fetch_nsepy_price.py` |
+|---|---|---|
+| Primary | yfinance `yf.download()` batch (v7) | nselib `price_volume_data()` per-symbol |
+| Secondary | yfinance `Ticker.history()` per-symbol (v8) | jugaad-data `stock_df()` per-symbol |
+| Tertiary | NSE via Playwright browser session | yfinance `Ticker.history()` per-symbol |
+
+### Libraries used
+
+- **nselib 2.5.1** (released May 1, 2026): `capital_market.price_volume_data(symbol, from_dd_mm_yyyy, to_dd_mm_yyyy)`. Handles >365-day ranges internally. Output columns include `OpenPrice`, `HighPrice`, `LowPrice`, `ClosePrice`, `TotalTradedQuantity`.
+- **jugaad-data 0.33.1** (released Nov 3, 2025): `stock_df(symbol, from_date, to_date, series)`. Accepts Python `date` objects. Built-in disk caching via `platformdirs`. Output columns include `OPEN`, `HIGH`, `LOW`, `CLOSE`, `VOLUME`.
+
+### Key differences from `fetch_prices.py`
+
+| Aspect | `fetch_prices.py` | `fetch_nsepy_price.py` |
+|---|---|---|
+| Fetch strategy | Batch (50 symbols/call) | Per-symbol (1 call each) |
+| Rate-limit handling | v7→v8 endpoint switch + `_yf_v7_blocked` flag | Circuit breaker (5 consecutive failures → 30s pause) |
+| Adjusted close | ✅ yfinance provides split/dividend-adjusted close | ❌ NSE API does not; `adj_close = close` |
+| NSE session | Playwright browser (acquires Akamai cookies) | HTTP library wrappers (nselib/jugaad-data) |
+| Date chunking | Orchestrated by `fetch_all_yf()` (12-week windows) | Handled internally by nselib |
+| Dependencies | yfinance, playwright | nselib, jugaad-data, yfinance (fallback only) |
+| Independence | Self-contained | Self-contained (no imports from `fetch_prices.py`) |
+
+### When to use `fetch_nsepy_price.py`
+
+- yfinance API is broken (Yahoo changes it 2–3× per year)
+- Rate-limiting is severe enough that even v8 fallback fails
+- Cross-checking data quality against an independent source
+
+### Caveats
+
+- **No adjusted close**: momentum calculations in `compute_metrics.py` use `adj_close`. When populated from NSE sources, this column equals the raw close price. Stocks with splits or large dividends in the fetch window will show slightly incorrect momentum scores.
+- **Slower**: per-symbol calls with 0.8–1.2s sleep between each means ~250 calls × ~1s = ~4 minutes minimum vs. ~5 batch calls for `fetch_prices.py`.
+- **NSE availability**: both nselib and jugaad-data hit NSE's public API directly without browser session cookies, making them more susceptible to Akamai bot detection than the Playwright approach in `fetch_prices.py`.
 
 ---
 

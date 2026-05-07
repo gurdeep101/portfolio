@@ -177,8 +177,18 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Writes**:
   - `data/prices/YYYY-WW.csv` — weekly OHLCV snapshot
   - `data/prices/daily_adj_close.csv` — cumulative daily adj_close (append-only)
-- **Args**: none
+- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
 - **Exit 0**: success. Exit 1: >8% of symbols failed.
+- **Primary source**: yfinance batch (50 symbols/call) with v7→v8 fallback and NSE Playwright recovery.
+
+### scripts/fetch_nsepy_price.py
+- **Writes**: identical outputs to `fetch_prices.py` — same file paths and formats
+- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
+- **Exit 0**: success. Exit 1: >8% of symbols failed.
+- **Primary source**: nselib → jugaad-data → yfinance (per-symbol fallback chain).
+- **When to use**: substitute for `fetch_prices.py` when yfinance is broken or rate-limited.
+  The two scripts are fully independent — neither imports from the other.
+- **Note**: NSE sources do not provide adjusted close prices; `adj_close` equals `close`.
 
 ### scripts/fetch_benchmark.py
 - **Writes**: appends to `data/benchmark.csv` (date, price_index, tri_level, source)
