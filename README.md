@@ -12,8 +12,11 @@ Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Pytho
 # Install dependencies
 uv sync
 
-# Verify
+# Verify core dependencies
 uv run python -c "import yfinance, pandas, numpy; print('OK')"
+
+# Verify NSE-native price fetcher dependencies
+uv run python -c "import nselib, jugaad_data; print('NSE libs OK')"
 ```
 
 ## First run (Phase 1 validation — do this before the first agent session)
@@ -30,6 +33,10 @@ uv run python scripts/fetch_prices.py
 # Verify: data/prices/YYYY-WW.csv exists
 #         data/prices/daily_adj_close.csv exists with ~250 columns
 #         Spot-check RELIANCE, HDFCBANK, TCS closes against NSE bhav copy
+#
+# Alternative: use NSE-native libraries instead of yfinance as primary source
+# uv run python scripts/fetch_nsepy_price.py
+# Produces identical output files. Use when yfinance API is broken.
 
 # 3. Fetch benchmark (~5s)
 uv run python scripts/fetch_benchmark.py
@@ -65,7 +72,8 @@ CLAUDE.md                        # Agent protocol — the application
 pyproject.toml                   # Dependencies (managed by uv)
 scripts/
   fetch_universe.py              # Nifty 250 constituent list (refreshes every 90 days)
-  fetch_prices.py                # Weekly OHLCV + daily adj_close history
+  fetch_prices.py                # Weekly OHLCV + daily adj_close (yfinance primary)
+  fetch_nsepy_price.py           # Same outputs; NSE-native libraries primary (fallback script)
   fetch_benchmark.py             # Nifty 250 TRI (or price index fallback)
   fetch_fundamentals.py          # P/E, P/B, ROE, market cap via yfinance
   validate_data.py               # Data quality gate before each session
@@ -92,7 +100,7 @@ decisions/
 
 - **Nifty 250 TRI**: no reliable free API. The primary source is the NSE live JSON endpoint. If unavailable, the fallback is the `^CNX250` price index via yfinance, which understates the benchmark return by ~1.5%/year (the index dividend yield). Active return will appear ~1.5%/yr better than reality when the fallback is used. The `benchmark_source` column in `performance.csv` records which was used each session.
 
-- **yfinance reliability**: Yahoo Finance changes its internal API 2–3 times per year. When it breaks, `fetch_prices.py` will exit with an error. Fix: update yfinance (`uv sync --upgrade-package yfinance`) and retry.
+- **yfinance reliability**: Yahoo Finance changes its internal API 2–3 times per year. When it breaks, `fetch_prices.py` will exit with an error. Fix: update yfinance (`uv sync --upgrade-package yfinance`) and retry. If the breakage persists, run `fetch_nsepy_price.py` instead — it uses nselib and jugaad-data as primary sources and falls back to yfinance only for stragglers.
 
 - **Fundamentals coverage**: expect 20–30% of Nifty 250 stocks to have missing ROE or P/B in yfinance for Indian equities. These stocks are excluded from ranking (not imputed). See `data/missing_fundamentals_log.csv`.
 
