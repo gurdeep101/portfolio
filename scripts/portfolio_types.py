@@ -50,7 +50,7 @@ class TransactionLogEntry(TypedDict, total=False):
 
 
 class Portfolio(TypedDict):
-    """Root structure of data/portfolio.json."""
+    """Root structure of data/portfolio/portfolio.json."""
 
     inception_date: str | None   # ISO date of first session
     initial_capital: float       # INR 25,000
@@ -62,7 +62,7 @@ class Portfolio(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# decisions/YYYY-MM-DD.json
+# data/decisions/YYYY-MM-DD.json
 # ---------------------------------------------------------------------------
 
 class TradeDecision(TypedDict, total=False):
@@ -76,7 +76,7 @@ class TradeDecision(TypedDict, total=False):
 
 
 class DecisionsFile(TypedDict):
-    """Root structure of decisions/YYYY-MM-DD.json."""
+    """Root structure of data/decisions/YYYY-MM-DD.json."""
 
     session_date: str              # ISO date (YYYY-MM-DD)
     trades: list[TradeDecision]
@@ -84,7 +84,7 @@ class DecisionsFile(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# data/fundamentals/YYYY-WW.json  (per-symbol entries)
+# data/market/fundamentals/YYYY-WW.json  (per-symbol entries)
 # ---------------------------------------------------------------------------
 
 class FundamentalsEntry(TypedDict, total=False):
@@ -129,3 +129,65 @@ class PerformanceResult(TypedDict, total=False):
     active_cagr: float | None
     bm_source: str | None               # "TRI" | "price_index_nse" | "price_index_yfinance"
     weeks_since_inception: int          # number of sessions completed
+
+
+# ---------------------------------------------------------------------------
+# data/backtest/backtest_YYYYMMDD_Nmo.csv  (one row per weekly step)
+# ---------------------------------------------------------------------------
+
+class BacktestWeekResult(TypedDict, total=False):
+    """One row of backtest output, written per simulated weekly rebalance."""
+
+    week_date: str                           # ISO date of the weekly rebalance (Friday)
+    portfolio_nav: float
+    weekly_return_pct: float | None          # None for the first week (no prior NAV)
+    cumulative_return_pct: float             # (nav / initial_capital - 1) * 100
+    benchmark_level: float | None            # ^CNX250 close on or before week_date
+    benchmark_weekly_return_pct: float | None
+    benchmark_cumulative_return_pct: float | None
+    active_return_weekly_pct: float | None   # portfolio weekly - benchmark weekly
+    active_return_cumulative_pct: float | None
+    num_holdings: int
+    cash_pct: float                          # cash / nav * 100
+    num_buys: int
+    num_sells: int
+    turnover_pct: float                      # (gross_buys + gross_sells) / nav_before * 100
+    transaction_cost_inr: float              # total cost deducted this week
+
+
+# ---------------------------------------------------------------------------
+# data/backtest/backtest_YYYYMMDD_Nmo_trades.csv  (one row per trade)
+# ---------------------------------------------------------------------------
+
+class BacktestTradeEntry(TypedDict):
+    """One executed trade recorded during the backtest simulation."""
+
+    week_date: str          # ISO date of the signal week (Friday)
+    action: str             # "BUY" | "SELL" | "TRIM"
+    symbol: str
+    shares: float
+    execution_price: float  # next-day high (BUY) or next-day low (SELL / TRIM)
+    gross_value: float      # shares * execution_price
+    transaction_cost: float # gross_value * TRANSACTION_COST_PCT
+    avg_cost_before: float  # cost basis per share before this trade
+    realized_pnl: float     # (execution_price - avg_cost_before) * shares; 0 for buys
+
+
+# ---------------------------------------------------------------------------
+# data/backtest/backtest_YYYYMMDD_Nmo_tax.csv  (one row per calendar year)
+# ---------------------------------------------------------------------------
+
+class BacktestAnnualTax(TypedDict):
+    """Tax liability for one calendar year, based on realized gains only.
+
+    Losses are carried forward and offset future years' gains.
+    Does not affect NAV or return calculations.
+    """
+
+    year: int
+    gross_realized_gain_inr: float      # sum of realized P&L from all sells/trims this year
+    prior_loss_carryforward_inr: float  # unrelieved loss accumulated from prior years
+    net_taxable_gain_inr: float         # max(0, gross_realized_gain - prior_loss_carryforward)
+    tax_rate_pct: float                 # flat rate (e.g. 30.0)
+    tax_liability_inr: float            # net_taxable_gain * tax_rate_pct / 100
+    loss_to_carryforward_inr: float     # unrelieved loss rolled into next year (0 if net gain)

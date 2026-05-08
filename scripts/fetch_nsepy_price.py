@@ -1,8 +1,8 @@
 """Fetch weekly OHLCV and cumulative daily adj_close for all Nifty 250 symbols.
 
 Writes:
-  data/prices/YYYY-WW.csv          — weekly OHLCV snapshot (immutable once written)
-  data/prices/daily_adj_close.csv  — cumulative append-only daily adj_close (wide format)
+  data/market/prices/YYYY-WW.csv          — weekly OHLCV snapshot (immutable once written)
+  data/market/prices/daily_adj_close.csv  — cumulative append-only daily adj_close (wide format)
 
 On first run, pulls HISTORY_WEEKS of history for the daily file.
 On subsequent runs, appends only rows newer than the last date already present.
@@ -47,8 +47,8 @@ warnings.filterwarnings("ignore", message=".*utcnow.*")
 # ── paths and constants ───────────────────────────────────────────────────────
 
 DATA_DIR      = Path(__file__).parent.parent / "data"
-PRICES_DIR    = DATA_DIR / "prices"
-UNIVERSE_FILE = DATA_DIR / "universe.csv"
+PRICES_DIR    = DATA_DIR / "market" / "prices"
+UNIVERSE_FILE = DATA_DIR / "universe" / "universe.csv"
 DAILY_FILE    = PRICES_DIR / "daily_adj_close.csv"
 
 FAILURE_THRESHOLD_PCT = 0.08   # abort if > this fraction return no data from any source
@@ -95,13 +95,13 @@ def subtract_months(d: date, months: int) -> date:
 
 
 def load_symbols() -> list[str]:
-    """Read data/universe.csv and return plain NSE symbols (no .NS suffix).
+    """Read data/universe/universe.csv and return plain NSE symbols (no .NS suffix).
 
     Returns a list like ['RELIANCE', 'TCS', ...].
     Exits with code 1 if the universe file is missing.
     """
     if not UNIVERSE_FILE.exists():
-        print("ERROR: data/universe.csv not found. Run fetch_universe.py first.")
+        print("ERROR: data/universe/universe.csv not found. Run fetch_universe.py first.")
         sys.exit(1)
     try:
         df = pd.read_csv(UNIVERSE_FILE)
