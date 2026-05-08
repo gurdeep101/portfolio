@@ -183,12 +183,15 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 
 ### scripts/fetch_nsepy_price.py
 - **Writes**: identical outputs to `fetch_prices.py` — same file paths and formats
-- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
+- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes),
+  `--months N` (ensure at least N months of history are present; downloads only missing data)
 - **Exit 0**: success. Exit 1: >8% of symbols failed.
 - **Primary source**: nselib → jugaad-data → yfinance (per-symbol fallback chain).
 - **When to use**: substitute for `fetch_prices.py` when yfinance is broken or rate-limited.
   The two scripts are fully independent — neither imports from the other.
 - **Note**: NSE sources do not provide adjusted close prices; `adj_close` equals `close`.
+- **Sync check**: on every run, warns if any ISO week has daily data in `daily_adj_close.csv`
+  but no corresponding `YYYY-WW.csv` snapshot, and auto-writes the missing snapshots.
 
 ### scripts/fetch_benchmark.py
 - **Writes**: appends to `data/benchmark.csv` (date, price_index, tri_level, source)

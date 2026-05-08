@@ -780,14 +780,36 @@ data source rather than yfinance.
 | Adjusted close | ✅ yfinance provides split/dividend-adjusted close | ❌ NSE API does not; `adj_close = close` |
 | NSE session | Playwright browser (acquires Akamai cookies) | HTTP library wrappers (nselib/jugaad-data) |
 | Date chunking | Orchestrated by `fetch_all_yf()` (12-week windows) | Handled internally by nselib |
+| History depth control | Fixed at `HISTORY_WEEKS` (52) | `--months N` flag; downloads only missing data |
+| Snapshot sync check | ❌ Not implemented | ✅ Warns + auto-fixes missing `YYYY-WW.csv` on every run |
+| Backfill support | ❌ Forward-only append | ✅ Detects and fills historical gaps in `daily_adj_close.csv` |
 | Dependencies | yfinance, playwright | nselib, jugaad-data, yfinance (fallback only) |
 | Independence | Self-contained | Self-contained (no imports from `fetch_prices.py`) |
+
+### CLI flags
+
+| Flag | Description |
+|---|---|
+| `--limit N` | Only process the first N symbols (testing) |
+| `--dry-run` | Fetch but do not write any output files |
+| `--months N` | Ensure at least N months of history are present. Downloads only the missing portion; never deletes existing data. Defaults to `HISTORY_WEEKS` (52) on first run if omitted. |
+
+**Example — extend history to 24 months:**
+```bash
+uv run python scripts/fetch_nsepy_price.py --months 24
+```
+On first call this fetches 24 months from scratch. On every subsequent call it checks what is already in `daily_adj_close.csv`, downloads only the gap (if any), and does the usual incremental forward update.
+
+### Snapshot sync
+
+On every run the script compares which ISO weeks are represented in `daily_adj_close.csv` against which `YYYY-WW.csv` files exist on disk. If any are missing it prints a warning and automatically writes the missing snapshots after the fetch completes. This keeps the two output types in sync even after a backfill.
 
 ### When to use `fetch_nsepy_price.py`
 
 - yfinance API is broken (Yahoo changes it 2–3× per year)
 - Rate-limiting is severe enough that even v8 fallback fails
 - Cross-checking data quality against an independent source
+- Extending history beyond the default 52 weeks (`--months 24`, `--months 36`, etc.)
 
 ### Caveats
 
@@ -799,8 +821,10 @@ data source rather than yfinance.
 
 ## Summary
 
-The enhanced `fetch_prices.py` provides resilient OHLCV data collection through a
-layered source strategy and accurate rate-limit detection:
+### `fetch_prices.py`
+
+Resilient OHLCV data collection through a layered source strategy and accurate
+rate-limit detection:
 
 ✅ **Rate-limit resilience** — Three distinct paths handle raised exceptions, silent
    empty returns, and already-blocked sessions; all automatically route to v8.  
@@ -811,3 +835,18 @@ layered source strategy and accurate rate-limit detection:
 ✅ **Testability** — `--limit N` and `--dry-run` flags allow safe end-to-end testing.  
 ✅ **Diagnostics** — Per-source summary, source-specific warnings, unbuffered output.  
 ✅ **Backward compatibility** — Identical CLI interface; same output file formats.
+
+### `fetch_nsepy_price.py`
+
+Drop-in alternative with NSE-native libraries as primary and configurable history depth:
+
+✅ **Configurable history** — `--months N` fetches any depth of history on demand.  
+✅ **Gap-only downloads** — Computes backfill and forward gaps separately; never
+   re-downloads data already present in `daily_adj_close.csv`.  
+✅ **Snapshot sync** — On every run, detects weeks with daily data but no `YYYY-WW.csv`
+   and auto-writes the missing files; warns the user if any divergence is found.  
+✅ **Backfill safety** — `update_daily_file()` skips dates already present rather than
+   overwriting; historical rows are never deleted.  
+✅ **Testability** — `--limit N` and `--dry-run` flags work across all fetch passes.  
+✅ **Source resilience** — Three-source cascade (nselib → jugaad-data → yfinance)
+   runs independently for each gap range.
