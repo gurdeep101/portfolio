@@ -37,6 +37,9 @@ uv run python scripts/fetch_prices.py
 # Alternative: use NSE-native libraries instead of yfinance as primary source
 # uv run python scripts/fetch_nsepy_price.py
 # Produces identical output files. Use when yfinance API is broken.
+# To fetch more history than the default 52 weeks, pass --months:
+# uv run python scripts/fetch_nsepy_price.py --months 24
+# Downloads only what is missing; never deletes existing data.
 
 # 3. Fetch benchmark (~5s)
 uv run python scripts/fetch_benchmark.py

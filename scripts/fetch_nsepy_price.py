@@ -30,6 +30,7 @@ Column schema (all output DataFrames):
 from __future__ import annotations
 
 import argparse
+import calendar
 import random
 import sys
 import time
@@ -80,6 +81,17 @@ def iso_week_str(d: date) -> str:
     """Return an ISO year-week string (e.g. '2026-18') for date *d*."""
     iso = d.isocalendar()
     return f"{iso.year}-{iso.week:02d}"
+
+
+def subtract_months(d: date, months: int) -> date:
+    """Return the date that is `months` calendar months before `d`."""
+    month = d.month - (months % 12)
+    year  = d.year  - (months // 12)
+    if month <= 0:
+        month += 12
+        year  -= 1
+    max_day = calendar.monthrange(year, month)[1]
+    return date(year, month, min(d.day, max_day))
 
 
 def load_symbols() -> list[str]:
@@ -149,10 +161,10 @@ def update_daily_file(df: pd.DataFrame) -> None:
             print(f"ERROR: Could not read existing daily_adj_close.csv: {e}")
             sys.exit(1)
 
-        last_date = existing.index.max()
-        new_rows = pivot[pivot.index > last_date]
+        new_rows = pivot[~pivot.index.isin(existing.index)]
 
         if new_rows.empty:
+            last_date = existing.index.max()
             print(f"  daily_adj_close.csv already up to date (last: {last_date.date()}).")
             return
 
@@ -163,8 +175,9 @@ def update_daily_file(df: pd.DataFrame) -> None:
         try:
             combined.to_csv(DAILY_FILE)
             print(
-                f"  Appended {len(new_rows)} new rows to daily_adj_close.csv "
-                f"(total: {len(combined)} rows)"
+                f"  Added {len(new_rows)} new rows to daily_adj_close.csv "
+                f"(total: {len(combined)} rows, "
+                f"range: {combined.index.min().date()} to {combined.index.max().date()})"
             )
         except OSError as e:
             print(f"ERROR: Could not write daily_adj_close.csv: {e}")
@@ -179,6 +192,35 @@ def update_daily_file(df: pd.DataFrame) -> None:
         except OSError as e:
             print(f"ERROR: Could not create daily_adj_close.csv: {e}")
             sys.exit(1)
+
+
+def check_snapshot_sync() -> set[str]:
+    """Return ISO week strings that have daily data but no OHLCV snapshot file.
+
+    Used to detect divergence between daily_adj_close.csv and the per-week
+    YYYY-WW.csv files. An empty set means the two are in sync.
+    """
+    if not DAILY_FILE.exists():
+        return set()
+    try:
+        existing = pd.read_csv(DAILY_FILE, index_col=0, parse_dates=True)
+    except (OSError, pd.errors.ParserError):
+        return set()
+    covered_weeks = {iso_week_str(ts.date()) for ts in existing.index}
+    return {w for w in covered_weeks if not (PRICES_DIR / f"{w}.csv").exists()}
+
+
+def write_historical_snapshots(df: pd.DataFrame) -> None:
+    """Write YYYY-WW.csv for every ISO week in *df* that is missing a snapshot.
+
+    Groups the DataFrame by ISO week and calls write_weekly_snapshot() for each
+    week without an existing file. Safe to call redundantly — write_weekly_snapshot
+    already no-ops if the target file exists.
+    """
+    tmp = df.copy()
+    tmp["_week"] = pd.to_datetime(tmp["date"]).apply(lambda d: iso_week_str(d.date()))
+    for week_str, week_df in tmp.groupby("_week"):
+        write_weekly_snapshot(week_df.drop(columns="_week"), str(week_str))
 
 
 # ── SOURCE 1: nselib ─────────────────────────────────────────────────────────
@@ -546,6 +588,51 @@ def fetch_failed_via_yfinance(
     return combined, still_missing
 
 
+# ── cascade helper ────────────────────────────────────────────────────────────
+
+
+def _run_cascade(
+    symbols: list[str],
+    meta: dict[str, str],
+    start: date,
+    end: date,
+) -> tuple[pd.DataFrame, list[str]]:
+    """Run the nselib → jugaad-data → yfinance cascade for one date range.
+
+    Returns (combined_df, missing_symbols). Does not apply the failure-threshold
+    check — that is done by the caller across all ranges.
+    """
+    # SOURCE 1: nselib
+    df_nselib, nselib_failed = fetch_all_nselib(symbols, start, end)
+    nselib_got = len(df_nselib["symbol"].unique()) if not df_nselib.empty else 0
+    print(f"nselib: {nselib_got} succeeded, {len(nselib_failed)} failed")
+
+    # SOURCE 2: jugaad-data fallback
+    df_jugaad:            pd.DataFrame = pd.DataFrame()
+    jugaad_still_missing: list[str]    = []
+    if nselib_failed:
+        df_jugaad, jugaad_still_missing = fetch_failed_via_jugaad(
+            nselib_failed, start, end, meta
+        )
+
+    # SOURCE 3: yfinance fallback
+    df_yf:            pd.DataFrame = pd.DataFrame()
+    yf_still_missing: list[str]    = []
+    if jugaad_still_missing:
+        df_yf, yf_still_missing = fetch_failed_via_yfinance(jugaad_still_missing, start, end)
+
+    frames = [f for f in [df_nselib, df_jugaad, df_yf] if not f.empty]
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+    # all_missing = final set with no data from any source
+    all_missing: list[str] = (
+        yf_still_missing     if jugaad_still_missing else
+        jugaad_still_missing if nselib_failed        else
+        []
+    )
+    return combined, all_missing
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 
@@ -555,12 +642,19 @@ def main() -> None:
     On first run pulls HISTORY_WEEKS of daily history. On subsequent runs
     appends only rows newer than the last date in daily_adj_close.csv.
 
+    When --months N is supplied the script ensures at least N months of history
+    are present in daily_adj_close.csv, downloading only the missing portion.
+
+    Keeps weekly OHLCV snapshot files (YYYY-WW.csv) in sync with
+    daily_adj_close.csv — warns on divergence and auto-writes missing snapshots.
+
     Exits with code 1 if more than FAILURE_THRESHOLD_PCT of symbols return
     no data from any source (nselib + jugaad-data + yfinance combined).
 
     Flags:
-      --limit N    Only fetch the first N symbols (for testing).
-      --dry-run    Fetch and report but do not write any files.
+      --limit N      Only fetch the first N symbols (for testing).
+      --dry-run      Fetch and report but do not write any files.
+      --months N     Ensure at least N months of history are present.
     """
     parser = argparse.ArgumentParser(
         description="Fetch NSE prices via nselib + jugaad-data (yfinance fallback)"
@@ -570,6 +664,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--dry-run", action="store_true", help="Fetch but do not write output files"
+    )
+    parser.add_argument(
+        "--months", type=int, default=None,
+        help=(
+            "Ensure at least N months of history are present. "
+            "Downloads only missing data. Defaults to HISTORY_WEEKS on first run if omitted."
+        ),
     )
     args = parser.parse_args()
 
@@ -589,60 +690,90 @@ def main() -> None:
 
     print(f"Universe: {total} symbols")
 
-    # Determine fetch window: incremental from last known date, or full history on first run
+    # ── sync check: warn if any week has daily data but no snapshot file ───────
+    missing_snapshots = check_snapshot_sync()
+    if missing_snapshots:
+        print(
+            f"WARNING: {len(missing_snapshots)} week(s) have daily data but no OHLCV snapshot. "
+            f"They will be written after this fetch. "
+            f"({', '.join(sorted(missing_snapshots)[:5])}"
+            + (" …" if len(missing_snapshots) > 5 else "") + ")"
+        )
+
+    # ── determine fetch ranges ────────────────────────────────────────────────
+    # historical_range: (start, end) for backfill, or the full initial fetch.
+    # forward_range:    (start, end) for the incremental forward update.
+    # Either may be None if that gap does not exist.
+    historical_range: tuple[date, date] | None = None
+    forward_range:    tuple[date, date] | None = None
+
+    requested_start: date | None = (
+        subtract_months(today, args.months) if args.months is not None else None
+    )
+    if requested_start is not None:
+        print(f"[--months {args.months}] History target: {requested_start}")
+
     if DAILY_FILE.exists():
         try:
             existing_daily  = pd.read_csv(DAILY_FILE, index_col=0, parse_dates=True)
+            existing_start  = existing_daily.index.min().date()
             last_daily_date = existing_daily.index.max().date()
-            start           = last_daily_date + timedelta(days=1)
-            print(f"Daily file exists. Fetching from {start} to {today}.")
         except (OSError, pd.errors.ParserError) as e:
             print(f"ERROR: Could not read existing daily_adj_close.csv: {e}")
             sys.exit(1)
-    else:
-        start = today - timedelta(weeks=HISTORY_WEEKS)
-        print(f"First run. Fetching {HISTORY_WEEKS} weeks of history from {start} to {today}.")
 
-    if start > today:
+        print(
+            f"Daily file exists. Coverage: {existing_start} to {last_daily_date} "
+            f"({len(existing_daily)} rows)."
+        )
+
+        # Backfill gap: requested history goes further back than what we have
+        if requested_start is not None and requested_start < existing_start:
+            backfill_end = existing_start - timedelta(days=1)
+            historical_range = (requested_start, backfill_end)
+            print(f"  Backfill gap:  {requested_start} to {backfill_end} (will download)")
+
+        # Forward gap: we are behind today
+        fwd_start = last_daily_date + timedelta(days=1)
+        if fwd_start <= today:
+            forward_range = (fwd_start, today)
+            print(f"  Forward gap:   {fwd_start} to {today} (will download)")
+        else:
+            print(f"  Forward gap:   none (already current)")
+
+    else:
+        # First run — no existing data at all
+        init_start = requested_start if requested_start is not None else (
+            today - timedelta(weeks=HISTORY_WEEKS)
+        )
+        historical_range = (init_start, today)
+        print(f"First run. Fetching from {init_start} to {today}.")
+
+    if historical_range is None and forward_range is None:
         print("Already up to date.")
         return
 
-    # ── SOURCE 1: nselib ─────────────────────────────────────────────────────
-    df_nselib, nselib_failed = fetch_all_nselib(symbols, start, today)
+    # ── fetch each gap via the cascade ────────────────────────────────────────
+    all_frames:   list[pd.DataFrame] = []
+    all_missing:  list[str]          = []
 
-    nselib_got = len(df_nselib["symbol"].unique()) if not df_nselib.empty else 0
-    print(f"nselib: {nselib_got} succeeded, {len(nselib_failed)} failed")
+    for label, gap in [("backfill", historical_range), ("forward", forward_range)]:
+        if gap is None:
+            continue
+        gap_start, gap_end = gap
+        print(f"\n── Fetching {label} range: {gap_start} to {gap_end} ──")
+        df_gap, missing_gap = _run_cascade(symbols, meta, gap_start, gap_end)
+        if not df_gap.empty:
+            all_frames.append(df_gap)
+        all_missing = list(set(all_missing) | set(missing_gap))
 
-    # ── SOURCE 2: jugaad-data fallback ───────────────────────────────────────
-    df_jugaad            = pd.DataFrame()
-    jugaad_still_missing: list[str] = []
-
-    if nselib_failed:
-        df_jugaad, jugaad_still_missing = fetch_failed_via_jugaad(
-            nselib_failed, start, today, meta
-        )
-
-    # ── SOURCE 3: yfinance fallback ──────────────────────────────────────────
-    df_yf            = pd.DataFrame()
-    yf_still_missing: list[str] = []
-
-    if jugaad_still_missing:
-        df_yf, yf_still_missing = fetch_failed_via_yfinance(jugaad_still_missing, start, today)
-
-    # ── combine results ───────────────────────────────────────────────────────
-    frames = [f for f in [df_nselib, df_jugaad, df_yf] if not f.empty]
-    df     = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-
-    # all_missing is the final set of symbols with no data from any source
-    all_missing = yf_still_missing if jugaad_still_missing else (
-        jugaad_still_missing if nselib_failed else []
-    )
+    df = pd.concat(all_frames, ignore_index=True) if all_frames else pd.DataFrame()
 
     if df.empty:
         print("ERROR: No data returned for any symbol from any source.")
         sys.exit(1)
 
-    # ── failure threshold check ───────────────────────────────────────────────
+    # ── failure threshold check (across all gaps combined) ────────────────────
     missing_pct = len(all_missing) / total
     if missing_pct > FAILURE_THRESHOLD_PCT:
         print(
@@ -661,33 +792,25 @@ def main() -> None:
     # ── write outputs ─────────────────────────────────────────────────────────
     if args.dry_run:
         print("\n[--dry-run] Skipping file writes.")
-        print(f"  Would write: {PRICES_DIR}/{week_str}.csv  ({len(df)} rows for current week)")
+        current_week_rows = df[
+            pd.to_datetime(df["date"]).apply(lambda d: iso_week_str(d.date())) == week_str
+        ]
+        print(f"  Would write snapshots for all ISO weeks in fetched data.")
+        print(f"  Would write: {PRICES_DIR}/{week_str}.csv  ({len(current_week_rows)} rows for current week)")
         print(f"  Would update: {DAILY_FILE}")
     else:
-        weekly_out = PRICES_DIR / f"{week_str}.csv"
-        if not weekly_out.exists():
-            # Slice to the current ISO week only for the weekly snapshot
-            week_start = today - timedelta(days=today.weekday())
-            week_df    = df[pd.to_datetime(df["date"]).dt.date >= week_start]
-            if not week_df.empty:
-                write_weekly_snapshot(week_df, week_str)
-            else:
-                print(f"WARNING: No data for current week {week_str} — snapshot not written.")
-        else:
-            print(f"Weekly snapshot {week_str}.csv already exists — skipping.")
+        # Write OHLCV snapshots for every week in the fetched data (backfill + forward).
+        # write_weekly_snapshot() no-ops for files that already exist.
+        write_historical_snapshots(df)
 
         update_daily_file(df)
 
     # ── summary ───────────────────────────────────────────────────────────────
     symbols_fetched = len(df["symbol"].unique())
-    nselib_set = set(df_nselib["symbol"].unique()) if not df_nselib.empty else set()
-    jugaad_set = set(df_jugaad["symbol"].unique()) if not df_jugaad.empty else set()
-    yf_set     = set(df_yf["symbol"].unique())     if not df_yf.empty     else set()
-    dry_tag    = " [dry-run, no files written]"    if args.dry_run        else ""
+    dry_tag = " [dry-run, no files written]" if args.dry_run else ""
     print(
-        f"\nDone{dry_tag}. {symbols_fetched}/{total} symbols fetched "
-        f"(nselib: {len(nselib_set)}, jugaad-data: {len(jugaad_set)}, "
-        f"yfinance: {len(yf_set)}, missing: {len(all_missing)})"
+        f"\nDone{dry_tag}. {symbols_fetched}/{total} symbols fetched, "
+        f"{len(all_missing)} missing."
     )
     if all_missing:
         print(f"Missing symbols: {sorted(all_missing)}")
