@@ -1,13 +1,13 @@
 """Compute portfolio performance metrics and stock rankings. Prints to stdout.
 
-Also appends a pre-rebalance performance row to data/performance.csv each session.
+Also appends a pre-rebalance performance row to data/portfolio/performance.csv each session.
 
 Reads:
-  data/portfolio.json
-  data/benchmark.csv
-  data/prices/YYYY-WW.csv          (latest weekly OHLCV snapshot)
-  data/prices/daily_adj_close.csv  (cumulative daily adj_close for MA calculation)
-  data/fundamentals/YYYY-WW.json   (latest available week)
+  data/portfolio/portfolio.json
+  data/market/benchmark.csv
+  data/market/prices/YYYY-WW.csv          (latest weekly OHLCV snapshot)
+  data/market/prices/daily_adj_close.csv  (cumulative daily adj_close for MA calculation)
+  data/market/fundamentals/YYYY-WW.json   (latest available week)
 
 Stocks are excluded from ranking (and cannot be bought) if:
   - ROE is missing or None
@@ -33,12 +33,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from portfolio_types import FundamentalsEntry, PerformanceResult, Portfolio
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-PRICES_DIR = DATA_DIR / "prices"
-FUNDAMENTALS_DIR = DATA_DIR / "fundamentals"
-PORTFOLIO_FILE = DATA_DIR / "portfolio.json"
-BENCHMARK_FILE = DATA_DIR / "benchmark.csv"
+PRICES_DIR = DATA_DIR / "market" / "prices"
+FUNDAMENTALS_DIR = DATA_DIR / "market" / "fundamentals"
+PORTFOLIO_FILE = DATA_DIR / "portfolio" / "portfolio.json"
+BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
 DAILY_FILE = PRICES_DIR / "daily_adj_close.csv"
-PERFORMANCE_FILE = DATA_DIR / "performance.csv"
+PERFORMANCE_FILE = DATA_DIR / "portfolio" / "performance.csv"
 
 MA_SHORT = 50           # short moving average window (days) for near-term momentum
 MA_LONG = 200           # long moving average window (days) for near-term momentum
@@ -62,7 +62,7 @@ def iso_week_str(d: date) -> str:
 
 
 def load_portfolio() -> Portfolio:
-    """Load data/portfolio.json, returning an empty all-cash portfolio if not found.
+    """Load data/portfolio/portfolio.json, returning an empty all-cash portfolio if not found.
 
     Exits with code 1 if the file exists but cannot be read or parsed.
     """
@@ -142,7 +142,7 @@ def load_daily_prices(lookback_days: int = 300) -> pd.DataFrame | None:
 
 
 def load_benchmark() -> pd.DataFrame | None:
-    """Load data/benchmark.csv sorted by date, or None if the file does not exist."""
+    """Load data/market/benchmark.csv sorted by date, or None if the file does not exist."""
     if not BENCHMARK_FILE.exists():
         return None
     try:
@@ -405,7 +405,7 @@ def compute_performance(
 
 
 def write_performance_row(perf: PerformanceResult) -> None:
-    """Append (or replace today's) performance row in data/performance.csv.
+    """Append (or replace today's) performance row in data/portfolio/performance.csv.
 
     Reads the existing file, removes any row for today, then appends the new row.
     Creates the file with a header on first write.

@@ -1,8 +1,8 @@
 """Fetch weekly OHLCV and cumulative daily adj_close for all Nifty 250 symbols.
 
 Writes:
-  data/prices/YYYY-WW.csv          — weekly OHLCV snapshot (immutable once written)
-  data/prices/daily_adj_close.csv  — cumulative append-only daily adj_close (wide format)
+  data/market/prices/YYYY-WW.csv          — weekly OHLCV snapshot (immutable once written)
+  data/market/prices/daily_adj_close.csv  — cumulative append-only daily adj_close (wide format)
 
 On first run, pulls HISTORY_WEEKS of history for the daily file.
 On subsequent runs, appends only rows newer than the last date already present.
@@ -37,8 +37,8 @@ warnings.filterwarnings("ignore", message=".*utcnow.*")
 print(f"yfinance version: {yf.__version__}")
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-PRICES_DIR = DATA_DIR / "prices"
-UNIVERSE_FILE = DATA_DIR / "universe.csv"
+PRICES_DIR = DATA_DIR / "market" / "prices"
+UNIVERSE_FILE = DATA_DIR / "universe" / "universe.csv"
 DAILY_FILE = PRICES_DIR / "daily_adj_close.csv"
 
 BATCH_SIZE = 50               # symbols per yf.download call
@@ -77,14 +77,14 @@ def iso_week_str(d: date) -> str:
 
 
 def load_symbols() -> list[str]:
-    """Read data/universe.csv and return (nse_tickers, symbol_list).
+    """Read data/universe/universe.csv and return (nse_tickers, symbol_list).
 
     nse_tickers: list of '.NS' tickers for yfinance
     Returns the plain symbol list.
     Exits with code 1 if the universe file is missing.
     """
     if not UNIVERSE_FILE.exists():
-        print("ERROR: data/universe.csv not found. Run fetch_universe.py first.")
+        print("ERROR: data/universe/universe.csv not found. Run fetch_universe.py first.")
         sys.exit(1)
     try:
         df = pd.read_csv(UNIVERSE_FILE)

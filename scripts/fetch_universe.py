@@ -1,4 +1,4 @@
-"""Fetch Nifty LargeMidcap 250 constituent list from NSE and write to data/universe.csv.
+"""Fetch Nifty LargeMidcap 250 constituent list from NSE and write to data/universe/universe.csv.
 
 NSE's archive CSV URL is defunct (blocked by Akamai bot protection). This script
 uses a headless Playwright browser to establish a real browser session, then calls
@@ -23,7 +23,7 @@ from pathlib import Path
 import pandas as pd
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-OUT_FILE = DATA_DIR / "universe.csv"
+OUT_FILE = DATA_DIR / "universe" / "universe.csv"
 
 MAX_AGE_DAYS = 90           # refresh cadence — matches NSE semi-annual reindex
 MIN_ROWS = 240              # sanity bound: fewer rows → partial download
@@ -164,7 +164,7 @@ def build_dataframe(stocks: list[dict]) -> pd.DataFrame:  # type: ignore[type-ar
 
 
 def main() -> None:
-    """Fetch the Nifty LargeMidcap 250 constituent list and write to data/universe.csv.
+    """Fetch the Nifty LargeMidcap 250 constituent list and write to data/universe/universe.csv.
 
     Skips the download if universe.csv is less than MAX_AGE_DAYS old.
     Exits with code 1 without overwriting the existing file on any failure.
@@ -177,7 +177,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     # --- Age check -----------------------------------------------------------
     if not args.force and is_fresh(OUT_FILE, MAX_AGE_DAYS):

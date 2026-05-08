@@ -754,8 +754,8 @@ Watch session logs for these patterns:
 
 ## Alternative: `fetch_nsepy_price.py`
 
-A fully independent script that produces the same output files (`data/prices/YYYY-WW.csv`
-and `data/prices/daily_adj_close.csv`) using NSE-native Python libraries as the primary
+A fully independent script that produces the same output files (`data/market/prices/YYYY-WW.csv`
+and `data/market/prices/daily_adj_close.csv`) using NSE-native Python libraries as the primary
 data source rather than yfinance.
 
 ### Source priority

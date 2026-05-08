@@ -14,7 +14,7 @@ top to bottom, in order — without waiting for further prompting.
 ### START OF SESSION — run every step, in order
 
 **Step 1 — Read current state**
-Read `data/portfolio.json`. Report:
+Read `data/portfolio/portfolio.json`. Report:
 - Today's date and ISO week
 - Current NAV (INR)
 - Number of holdings
@@ -25,7 +25,7 @@ Read `data/portfolio.json`. Report:
 ```
 uv run python scripts/fetch_universe.py
 ```
-The script skips automatically if `data/universe.csv` is less than 90 days old.
+The script skips automatically if `data/universe/universe.csv` is less than 90 days old.
 If it runs and the symbol count changes by more than 5, flag this prominently in the session log.
 
 **Step 3 — Fetch prices**
@@ -47,7 +47,7 @@ If it fails, note it in the session log and skip benchmark comparison this sessi
 uv run python scripts/fetch_fundamentals.py
 ```
 The script skips symbols fetched within the last 7 days. On first run, expect 5–15 minutes.
-If it fails entirely, use the most recent `data/fundamentals/` file and log a warning.
+If it fails entirely, use the most recent `data/market/fundamentals/` file and log a warning.
 
 **Step 6 — Validate data (gate)**
 ```
@@ -62,7 +62,7 @@ Read output carefully.
 ```
 uv run python scripts/compute_metrics.py
 ```
-Read the full output. This script also writes a row to `data/performance.csv`.
+Read the full output. This script also writes a row to `data/portfolio/performance.csv`.
 Pay attention to:
 - Performance summary (weekly return, inception return, CAGR vs benchmark)
 - The full ranking table and which stocks are BUY_CANDIDATE / SELL_CANDIDATE / HELD
@@ -77,7 +77,7 @@ Apply the Investment Strategy below. Think through:
 5. Do not trade any stock flagged with a large price move in Step 6.
 
 **Step 9 — Write decisions file**
-Write `decisions/YYYY-MM-DD.json` using today's date. Use this format exactly:
+Write `data/decisions/YYYY-MM-DD.json` using today's date. Use this format exactly:
 
 ```json
 {
@@ -94,7 +94,7 @@ If no trades are needed, write an empty trades array with a notes explaining why
 
 **Step 10 — Execute rebalance**
 ```
-uv run python scripts/update_portfolio.py --decisions decisions/YYYY-MM-DD.json
+uv run python scripts/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json
 ```
 Read the printed summary. Verify NAV is approximately preserved (minus transaction costs).
 
@@ -103,7 +103,7 @@ Write `logs/session_YYYY-MM-DD.md` following the Log Format section below.
 
 **Step 12 — Commit**
 ```
-git add data/ decisions/ logs/
+git add data/ logs/
 git commit -m "session YYYY-MM-DD: NAV INR X,XXX (+X.X% wk, +X.X% incep) vs bm +X.X%"
 ```
 Replace X values with the actual numbers from the performance summary.
@@ -129,7 +129,7 @@ These are non-negotiable. Enforce them even if the strategy suggests otherwise.
 - **Max single position**: 20% of NAV. Trim any holding that exceeds this.
 - **Min position size**: INR 500. Do not buy if the trade value is below this.
 - **No short selling. No derivatives.**
-- **Universe only**: stocks must be in current `data/universe.csv` at time of trade.
+- **Universe only**: stocks must be in current `data/universe/universe.csv` at time of trade.
 - **Large moves**: if a stock moved >40% in the past week (flagged by validate_data.py),
   do NOT trade it. Flag it in the session log for manual review.
 - **Transaction cost**: 0.1% per trade side. Already deducted by update_portfolio.py.
@@ -169,14 +169,14 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 ## Tool Inventory
 
 ### scripts/fetch_universe.py
-- **Writes**: `data/universe.csv` (symbol, company_name, series, isin_code, sector)
+- **Writes**: `data/universe/universe.csv` (symbol, company_name, series, isin_code, sector)
 - **Args**: none (or `--force` to override 90-day age check)
 - **Exit 0**: success or skipped (too fresh). Exit 1: download failed (file unchanged).
 
 ### scripts/fetch_prices.py
 - **Writes**:
-  - `data/prices/YYYY-WW.csv` — weekly OHLCV snapshot
-  - `data/prices/daily_adj_close.csv` — cumulative daily adj_close (append-only)
+  - `data/market/prices/YYYY-WW.csv` — weekly OHLCV snapshot
+  - `data/market/prices/daily_adj_close.csv` — cumulative daily adj_close (append-only)
 - **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
 - **Exit 0**: success. Exit 1: >8% of symbols failed.
 - **Primary source**: yfinance batch (50 symbols/call) with v7→v8 fallback and NSE Playwright recovery.
@@ -191,12 +191,12 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Note**: NSE sources do not provide adjusted close prices; `adj_close` equals `close`.
 
 ### scripts/fetch_benchmark.py
-- **Writes**: appends to `data/benchmark.csv` (date, price_index, tri_level, source)
+- **Writes**: appends to `data/market/benchmark.csv` (date, price_index, tri_level, source)
 - **Args**: none
 - **Exit 0**: success. Exit 1: all sources failed.
 
 ### scripts/fetch_fundamentals.py
-- **Writes**: `data/fundamentals/YYYY-WW.json`; appends to `data/missing_fundamentals_log.csv`
+- **Writes**: `data/market/fundamentals/YYYY-WW.json`; appends to `data/market/missing_fundamentals_log.csv`
 - **Args**: none
 - **Runtime**: 5–15 minutes on full run; much faster if recent cache exists.
 
@@ -208,7 +208,7 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 ### scripts/compute_metrics.py
 - **Reads**: all data files
 - **Prints**: performance summary, ranking table, holdings table
-- **Writes**: appends to `data/performance.csv`
+- **Writes**: appends to `data/portfolio/performance.csv`
 - **Args**: none
 
 ### scripts/update_portfolio.py
@@ -271,7 +271,7 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 
 ## Data Source Notes (fragility)
 
-- **universe.csv**: downloaded from NSE archive. FRAGILE — NSE blocks scrapers.
+- **data/universe/universe.csv**: downloaded from NSE archive. FRAGILE — NSE blocks scrapers.
   If download fails, keep existing file. Check if symbol count changed after a successful refresh.
 
 - **Prices**: yfinance `.NS` tickers. FRAGILE — Yahoo Finance changes its API 2–3× per year.
@@ -285,7 +285,7 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 
 - **Fundamentals**: yfinance `.info` — 20–30% null rates for Indian stocks are normal.
   Stocks with missing ROE or PB are excluded from ranking, not imputed.
-  Check `data/missing_fundamentals_log.csv` if exclusion rate seems unusually high.
+  Check `data/market/missing_fundamentals_log.csv` if exclusion rate seems unusually high.
 
 - **Corporate actions**: not automated. Manually check the NSE announcements page
   for held stocks before any session. Flag any splits, bonuses, or mergers in the log.

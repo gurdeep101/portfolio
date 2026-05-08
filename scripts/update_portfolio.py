@@ -1,8 +1,8 @@
-"""Apply rebalance decisions to data/portfolio.json.
+"""Apply rebalance decisions to data/portfolio/portfolio.json.
 
 Usage:
-  uv run python scripts/update_portfolio.py --decisions decisions/YYYY-MM-DD.json
-  uv run python scripts/update_portfolio.py --decisions decisions/YYYY-MM-DD.json --dry-run
+  uv run python scripts/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json
+  uv run python scripts/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json --dry-run
   uv run python scripts/update_portfolio.py --init   # initialise all-cash portfolio.json
 
 Execution price: uses adj_close from the most recent weekly prices CSV.
@@ -25,8 +25,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from portfolio_types import DecisionsFile, Portfolio, PortfolioHolding, TransactionLogEntry
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-PRICES_DIR = DATA_DIR / "prices"
-PORTFOLIO_FILE = DATA_DIR / "portfolio.json"
+PRICES_DIR = DATA_DIR / "market" / "prices"
+PORTFOLIO_FILE = DATA_DIR / "portfolio" / "portfolio.json"
 
 INITIAL_CAPITAL: float = 25000.0       # INR notional capital
 TRANSACTION_COST_PCT: float = 0.001    # 0.1% per trade side
@@ -34,7 +34,7 @@ MIN_BUY_VALUE: float = 500.0           # minimum INR trade size; smaller buys ar
 
 
 def load_portfolio() -> Portfolio:
-    """Load data/portfolio.json.
+    """Load data/portfolio/portfolio.json.
 
     Exits with code 1 if the file is missing (prompt user to run --init)
     or if it cannot be parsed.
@@ -52,7 +52,7 @@ def load_portfolio() -> Portfolio:
 
 
 def save_portfolio(portfolio: Portfolio, dry_run: bool) -> None:
-    """Write the portfolio to data/portfolio.json, or print a preview in dry-run mode."""
+    """Write the portfolio to data/portfolio/portfolio.json, or print a preview in dry-run mode."""
     if dry_run:
         print("\n[DRY RUN] portfolio.json NOT written. Resulting state would be:")
         print(json.dumps(portfolio, indent=2))
@@ -271,7 +271,7 @@ def refresh_holdings(portfolio: Portfolio, prices: dict[str, float]) -> None:
 def main() -> None:
     """Parse arguments and either initialise portfolio.json or apply trade decisions."""
     parser = argparse.ArgumentParser(
-        description="Apply rebalance decisions to data/portfolio.json"
+        description="Apply rebalance decisions to data/portfolio/portfolio.json"
     )
     parser.add_argument("--decisions", help="Path to decisions JSON file")
     parser.add_argument(
@@ -284,7 +284,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    PORTFOLIO_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     # -------------------------------------------------------------------------
     # Initialisation mode

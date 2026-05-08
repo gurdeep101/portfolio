@@ -1,4 +1,4 @@
-"""Fetch Nifty 250 TRI (or price index fallback) and append to data/benchmark.csv.
+"""Fetch Nifty 250 TRI (or price index fallback) and append to data/market/benchmark.csv.
 
 Primary source: NSE live indices JSON endpoint (contains TRI values).
 Fallback:       yfinance ^CNX250 (price index only — ~1.5%/yr lower than TRI
@@ -19,7 +19,7 @@ import requests
 import yfinance as yf
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-BENCHMARK_FILE = DATA_DIR / "benchmark.csv"
+BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
 
 # NSE live indices endpoint — contains both price index and TRI for all indices.
 NSE_JSON_URL = "https://iislliveblob.niftyindices.com/jsonfiles/LiveIndicesWatch.json"
@@ -117,12 +117,12 @@ def load_existing() -> pd.DataFrame:
 
 
 def main() -> None:
-    """Fetch the latest Nifty 250 benchmark level and append it to data/benchmark.csv.
+    """Fetch the latest Nifty 250 benchmark level and append it to data/market/benchmark.csv.
 
     Tries the NSE TRI endpoint first; falls back to yfinance price index.
     Exits with code 1 if both sources fail.
     """
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    BENCHMARK_FILE.parent.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
 
     print("Fetching benchmark data...")

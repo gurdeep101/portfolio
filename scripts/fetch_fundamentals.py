@@ -1,9 +1,9 @@
 """Fetch P/E, P/B, ROE, and market cap for Nifty 250 stocks via yfinance.
 
-Writes data/fundamentals/YYYY-WW.json.
+Writes data/market/fundamentals/YYYY-WW.json.
 Skips symbols fetched within the last CACHE_AGE_DAYS days by re-using the
 most recent fundamentals file as a warm cache.
-Appends to data/missing_fundamentals_log.csv for any symbol with null ROE or PB —
+Appends to data/market/missing_fundamentals_log.csv for any symbol with null ROE or PB —
 those stocks are excluded from ranking each week.
 
 Runtime: 5–15 minutes on a full run (sequential .info calls, no batch API).
@@ -26,9 +26,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from portfolio_types import FundamentalsEntry
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-FUNDAMENTALS_DIR = DATA_DIR / "fundamentals"
-UNIVERSE_FILE = DATA_DIR / "universe.csv"
-MISSING_LOG = DATA_DIR / "missing_fundamentals_log.csv"
+FUNDAMENTALS_DIR = DATA_DIR / "market" / "fundamentals"
+UNIVERSE_FILE = DATA_DIR / "universe" / "universe.csv"
+MISSING_LOG = DATA_DIR / "market" / "missing_fundamentals_log.csv"
 
 CACHE_AGE_DAYS = 7       # skip symbols fetched more recently than this
 SLEEP_BETWEEN_CALLS = 0.5  # seconds between yfinance .info calls to avoid rate-limits
@@ -41,12 +41,12 @@ def iso_week_str(d: date) -> str:
 
 
 def load_symbols() -> list[tuple[str, str]]:
-    """Read data/universe.csv and return a list of (symbol, sector) pairs.
+    """Read data/universe/universe.csv and return a list of (symbol, sector) pairs.
 
     Exits with code 1 if the universe file is missing.
     """
     if not UNIVERSE_FILE.exists():
-        print("ERROR: data/universe.csv not found. Run fetch_universe.py first.")
+        print("ERROR: data/universe/universe.csv not found. Run fetch_universe.py first.")
         sys.exit(1)
     import pandas as pd
     try:
@@ -143,7 +143,7 @@ def extract_fields(info: dict[str, Any], symbol: str, sector: str) -> Fundamenta
 
 
 def log_missing(symbol: str, missing_fields: list[str], session_date: str) -> None:
-    """Append missing-field rows to data/missing_fundamentals_log.csv.
+    """Append missing-field rows to data/market/missing_fundamentals_log.csv.
 
     Creates the file with a header row on first write.
     """
@@ -161,7 +161,7 @@ def log_missing(symbol: str, missing_fields: list[str], session_date: str) -> No
 
 
 def main() -> None:
-    """Fetch fundamentals for all Nifty 250 symbols and write to data/fundamentals/YYYY-WW.json.
+    """Fetch fundamentals for all Nifty 250 symbols and write to data/market/fundamentals/YYYY-WW.json.
 
     Uses a CACHE_AGE_DAYS-day in-memory cache to avoid refetching recently
     updated symbols. Logs any symbol with null ROE or PB to the missing log.

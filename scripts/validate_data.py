@@ -30,10 +30,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from portfolio_types import Portfolio
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-PRICES_DIR = DATA_DIR / "prices"
-UNIVERSE_FILE = DATA_DIR / "universe.csv"
-PORTFOLIO_FILE = DATA_DIR / "portfolio.json"
-BENCHMARK_FILE = DATA_DIR / "benchmark.csv"
+PRICES_DIR = DATA_DIR / "market" / "prices"
+UNIVERSE_FILE = DATA_DIR / "universe" / "universe.csv"
+PORTFOLIO_FILE = DATA_DIR / "portfolio" / "portfolio.json"
+BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
 
 PRICES_MAX_AGE_DAYS = 7       # prices older than this are stale
 BENCHMARK_MAX_AGE_DAYS = 7    # benchmark older than this triggers a warning
@@ -54,7 +54,7 @@ def latest_prices_file() -> Path | None:
 
 
 def load_portfolio() -> Portfolio:
-    """Load data/portfolio.json and return as a Portfolio dict.
+    """Load data/portfolio/portfolio.json and return as a Portfolio dict.
 
     Returns a minimal all-cash Portfolio if the file is missing (first run),
     and exits with code 1 if the file exists but cannot be read or parsed.
@@ -80,7 +80,7 @@ def load_portfolio() -> Portfolio:
 
 
 def load_universe_symbols() -> set[str]:
-    """Return the set of symbol strings from data/universe.csv.
+    """Return the set of symbol strings from data/universe/universe.csv.
 
     Returns an empty set if the file is missing, unreadable, or malformed —
     the caller converts this to a warning rather than a hard failure.
@@ -113,7 +113,7 @@ def main() -> None:
         prices_file = latest_prices_file()
         if prices_file is None:
             errors.append(
-                "No prices file found in data/prices/. Run fetch_prices.py."
+                "No prices file found in data/market/prices/. Run fetch_prices.py."
             )
         else:
             warnings.append(
@@ -153,7 +153,7 @@ def main() -> None:
     # -------------------------------------------------------------------------
     if not BENCHMARK_FILE.exists():
         warnings.append(
-            "data/benchmark.csv not found. "
+            "data/market/benchmark.csv not found."
             "Benchmark comparison unavailable this session."
         )
     else:
@@ -175,7 +175,7 @@ def main() -> None:
     # 4. Universe freshness and delisting check  (warnings only)
     # -------------------------------------------------------------------------
     if not UNIVERSE_FILE.exists():
-        warnings.append("data/universe.csv not found. Run fetch_universe.py.")
+        warnings.append("data/universe/universe.csv not found. Run fetch_universe.py.")
     else:
         uni_age = (
             datetime.now() - datetime.fromtimestamp(UNIVERSE_FILE.stat().st_mtime)
