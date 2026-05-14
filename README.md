@@ -34,10 +34,14 @@ uv run python scripts/fetch_prices.py
 #         data/market/prices/daily_adj_close.csv exists with ~250 columns
 #         Spot-check RELIANCE, HDFCBANK, TCS closes against NSE bhav copy
 #
+# Optional args: --limit N (first N symbols only), --dry-run (fetch but skip writes)
+# uv run python scripts/fetch_prices.py --limit 10 --dry-run  # quick smoke-test
+#
 # Alternative: use NSE-native libraries instead of yfinance as primary source
 # uv run python scripts/fetch_nsepy_price.py
 # Produces identical output files. Use when yfinance API is broken.
-# To fetch more history than the default 52 weeks, pass --months:
+# Optional args: --limit N, --dry-run, --months N (ensure N months of history present)
+# uv run python scripts/fetch_nsepy_price.py --limit 10 --dry-run
 # uv run python scripts/fetch_nsepy_price.py --months 24
 # Downloads only what is missing; never deletes existing data.
 
@@ -68,6 +72,21 @@ claude
 
 Claude reads CLAUDE.md, runs the 12-step protocol, writes decisions and logs, and commits.
 
+## Script reference
+
+| Script | Command | Arguments |
+|--------|---------|-----------|
+| `fetch_universe.py` | `uv run python scripts/fetch_universe.py` | `--force` — ignore 90-day age check |
+| `fetch_prices.py` | `uv run python scripts/fetch_prices.py` | `--limit N` — first N symbols only; `--dry-run` — skip writes |
+| `fetch_nsepy_price.py` | `uv run python scripts/fetch_nsepy_price.py` | `--limit N`; `--dry-run`; `--months N` — ensure N months of history |
+| `fetch_nselib_prices.py` | `uv run python scripts/fetch_nselib_prices.py` | `--limit N`; `--dry-run` |
+| `fetch_benchmark.py` | `uv run python scripts/fetch_benchmark.py` | — |
+| `fetch_fundamentals.py` | `uv run python scripts/fetch_fundamentals.py` | — |
+| `validate_data.py` | `uv run python scripts/validate_data.py` | — |
+| `compute_metrics.py` | `uv run python scripts/compute_metrics.py` | — |
+| `update_portfolio.py` | `uv run python scripts/update_portfolio.py --decisions PATH` | `--decisions PATH` (required); `--dry-run` — skip writes; `--init` — fresh portfolio (first run) |
+| `backtest.py` | `uv run python scripts/backtest.py` | `--months N` — months to backtest (1–MAX); prompts if omitted |
+
 ## Project structure
 
 ```
@@ -77,6 +96,7 @@ scripts/
   fetch_universe.py                    # Nifty 250 constituent list (refreshes every 90 days)
   fetch_prices.py                      # Weekly OHLCV + daily adj_close (yfinance primary)
   fetch_nsepy_price.py                 # Same outputs; NSE-native libraries primary (fallback)
+  fetch_nselib_prices.py               # Same outputs; nselib + jugaad-data primary (alternative)
   fetch_benchmark.py                   # Nifty 250 TRI (or price index fallback)
   fetch_fundamentals.py                # P/E, P/B, ROE, market cap via yfinance
   validate_data.py                     # Data quality gate before each session

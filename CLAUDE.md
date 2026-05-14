@@ -193,6 +193,13 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Sync check**: on every run, warns if any ISO week has daily data in `daily_adj_close.csv`
   but no corresponding `YYYY-WW.csv` snapshot, and auto-writes the missing snapshots.
 
+### scripts/fetch_nselib_prices.py
+- **Writes**: identical outputs to `fetch_prices.py` — same file paths and formats
+- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
+- **Exit 0**: success. Exit 1: >8% of symbols failed.
+- **Primary source**: nselib → jugaad-data → yfinance (per-symbol fallback chain).
+- **When to use**: alternative to `fetch_nsepy_price.py`; use when nselib is preferred over jugaad-data as the primary path.
+
 ### scripts/fetch_benchmark.py
 - **Writes**: appends to `data/market/benchmark.csv` (date, price_index, tri_level, source)
 - **Args**: none
@@ -218,6 +225,16 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Args**: `--decisions PATH` (required), `--dry-run` (optional), `--init` (first run only)
 - **Reads**: decisions JSON, portfolio.json, latest prices CSV
 - **Writes**: portfolio.json (in-place)
+
+### scripts/backtest.py
+- **Args**: `--months N` (optional integer, 1–MAX_MONTHS; prompts interactively if omitted)
+- **Writes**:
+  - `data/backtest/backtest_YYYYMMDD_Nmo.csv` — weekly NAV & return series
+  - `data/backtest/backtest_YYYYMMDD_Nmo_trades.csv` — per-trade execution log
+  - `data/backtest/backtest_YYYYMMDD_Nmo_monthly.csv` — monthly return matrix
+  - `data/backtest/backtest_YYYYMMDD_Nmo_tax.csv` — annual realized-gain tax table
+- **Limitations**: uses current fundamentals (look-ahead bias) and current Nifty 250 universe (survivorship bias). Results are illustrative, not authoritative.
+- **When to use**: ad-hoc, outside the weekly session protocol.
 
 ---
 
