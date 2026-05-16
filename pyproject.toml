@@ -16,8 +16,8 @@ dependencies = [
     "jugaad-data>=0.33.1",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "mypy>=1.10",
     "ruff>=0.4",
     "pandas-stubs>=2.2",

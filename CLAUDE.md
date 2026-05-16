@@ -1,7 +1,7 @@
 # nifty_agent
 
 Paper-trading Indian equity portfolio. INR 25,000 notional capital.
-Benchmark: Nifty 250 TRI. Universe: Nifty 250 constituents.
+Benchmark: Nifty LargeMidcap 250 price index. Universe: Nifty 250 constituents.
 Cadence: Weekly rebalance. **You are the agent. This file is your protocol.**
 
 Every time `claude` is run in this directory, you execute the session loop below —
@@ -23,35 +23,35 @@ Read `data/portfolio/portfolio.json`. Report:
 
 **Step 2 — Refresh universe (conditional)**
 ```
-uv run python scripts/fetch_universe.py
+uv run python scripts/fetch/fetch_universe.py
 ```
 The script skips automatically if `data/universe/universe.csv` is less than 90 days old.
 If it runs and the symbol count changes by more than 5, flag this prominently in the session log.
 
 **Step 3 — Fetch prices**
 ```
-uv run python scripts/fetch_prices.py
+uv run python scripts/fetch/fetch_nsepy_price.py
 ```
 This writes the weekly OHLCV snapshot and updates the daily adj_close history.
-On first run, it pulls 52 weeks of history — expect 60–120 minutes.
+On first run, it pulls 52 weeks of history — expect 5–10 minutes.
 If exit code is non-zero, STOP and report the error. Do not proceed.
 
 **Step 4 — Fetch benchmark**
 ```
-uv run python scripts/fetch_benchmark.py
+uv run python scripts/fetch/fetch_benchmark.py
 ```
 If it fails, note it in the session log and skip benchmark comparison this session. Continue.
 
 **Step 5 — Fetch fundamentals (conditional)**
 ```
-uv run python scripts/fetch_fundamentals.py
+uv run python scripts/fetch/fetch_fundamentals.py
 ```
 The script skips symbols fetched within the last 7 days. On first run, expect 5–15 minutes.
 If it fails entirely, use the most recent `data/market/fundamentals/` file and log a warning.
 
 **Step 6 — Validate data (gate)**
 ```
-uv run python scripts/validate_data.py
+uv run python scripts/pipeline/validate_data.py
 ```
 Read output carefully.
 - If exit code is 1: STOP. Report the blocking errors to the user. Do not rebalance.
@@ -60,7 +60,7 @@ Read output carefully.
 
 **Step 7 — Compute metrics**
 ```
-uv run python scripts/compute_metrics.py
+uv run python scripts/pipeline/compute_metrics.py
 ```
 Read the full output. This script also writes a row to `data/portfolio/performance.csv`.
 Pay attention to:
@@ -94,7 +94,7 @@ If no trades are needed, write an empty trades array with a notes explaining why
 
 **Step 10 — Execute rebalance**
 ```
-uv run python scripts/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json
+uv run python scripts/pipeline/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json
 ```
 Read the printed summary. Verify NAV is approximately preserved (minus transaction costs).
 
@@ -132,7 +132,7 @@ These are non-negotiable. Enforce them even if the strategy suggests otherwise.
 - **Universe only**: stocks must be in current `data/universe/universe.csv` at time of trade.
 - **Large moves**: if a stock moved >40% in the past week (flagged by validate_data.py),
   do NOT trade it. Flag it in the session log for manual review.
-- **Transaction cost**: 0.1% per trade side. Already deducted by update_portfolio.py.
+- **Transaction cost**: 0.1% per trade side. Already deducted by pipeline/update_portfolio.py.
 - **Rebalance once per session only.**
 
 ---
@@ -168,65 +168,56 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 
 ## Tool Inventory
 
-### scripts/fetch_universe.py
+### scripts/fetch/fetch_universe.py
 - **Writes**: `data/universe/universe.csv` (symbol, company_name, series, isin_code, sector)
 - **Args**: none (or `--force` to override 90-day age check)
 - **Exit 0**: success or skipped (too fresh). Exit 1: download failed (file unchanged).
 
-### scripts/fetch_prices.py
+### scripts/fetch/fetch_nsepy_price.py
 - **Writes**:
   - `data/market/prices/YYYY-WW.csv` — weekly OHLCV snapshot
   - `data/market/prices/daily_adj_close.csv` — cumulative daily adj_close (append-only)
-- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
-- **Exit 0**: success. Exit 1: >8% of symbols failed.
-- **Primary source**: yfinance batch (50 symbols/call) with v7→v8 fallback and NSE Playwright recovery.
-
-### scripts/fetch_nsepy_price.py
-- **Writes**: identical outputs to `fetch_prices.py` — same file paths and formats
 - **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes),
-  `--months N` (ensure at least N months of history are present; downloads only missing data)
+  `--months N` (ensure at least N months of history are present; downloads only missing data),
+  `--force` (re-fetch full target window and refresh overlapping daily rows from origin)
 - **Exit 0**: success. Exit 1: >8% of symbols failed.
 - **Primary source**: nselib → jugaad-data → yfinance (per-symbol fallback chain).
-- **When to use**: substitute for `fetch_prices.py` when yfinance is broken or rate-limited.
-  The two scripts are fully independent — neither imports from the other.
 - **Note**: NSE sources do not provide adjusted close prices; `adj_close` equals `close`.
 - **Sync check**: on every run, warns if any ISO week has daily data in `daily_adj_close.csv`
   but no corresponding `YYYY-WW.csv` snapshot, and auto-writes the missing snapshots.
 
-### scripts/fetch_nselib_prices.py
-- **Writes**: identical outputs to `fetch_prices.py` — same file paths and formats
-- **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes)
-- **Exit 0**: success. Exit 1: >8% of symbols failed.
-- **Primary source**: nselib → jugaad-data → yfinance (per-symbol fallback chain).
-- **When to use**: alternative to `fetch_nsepy_price.py`; use when nselib is preferred over jugaad-data as the primary path.
-
-### scripts/fetch_benchmark.py
+### scripts/fetch/fetch_benchmark.py
 - **Writes**: appends to `data/market/benchmark.csv` (date, price_index, tri_level, source)
 - **Args**: none
 - **Exit 0**: success. Exit 1: all sources failed.
+- **Primary source**: NSE live JSON endpoint for TRI; falls back to NSE price index via nselib, then yfinance `^CNX250`.
 
-### scripts/fetch_fundamentals.py
-- **Writes**: `data/market/fundamentals/YYYY-WW.json`; appends to `data/market/missing_fundamentals_log.csv`
-- **Args**: none
-- **Runtime**: 5–15 minutes on full run; much faster if recent cache exists.
+### scripts/fetch/fetch_fundamentals.py
+- **Writes**: `data/market/fundamentals/YYYY-WW.json` for each week in `data/market/prices/` that lacks a fundamentals file; appends to `data/market/missing_fundamentals_log.csv` (current week only)
+- **Args**: `--force` — re-fetch and overwrite all existing files
+- **Behaviour by week type**:
+  - **Current ISO week**: fetches via yfinance (P/E, P/B, ROE, market_cap). Source = `"yfinance"`. Runtime: 5–15 minutes on full run; much faster with warm cache.
+  - **Historical weeks**: fetches real point-in-time P/E from NSE archives via `nselib.capital_market.pe_ratio(date)`. P/B, ROE, and market_cap are `null` — not available from any free historical source. Source = `"nselib"`. Runtime: fast (one network call per week).
+- **Date fallback**: for historical weeks, tries the week's trading date then steps back up to 3 days to skip weekends/holidays.
+- **Early exit**: prints a message and exits 0 if all price weeks already have a fundamentals file (use `--force` to override).
 
-### scripts/validate_data.py
+### scripts/pipeline/validate_data.py
 - **Reads**: prices, benchmark, universe, portfolio.json
 - **Prints**: PASS / WARNING / ERROR lines
 - **Exit 0**: pass (possibly with warnings). Exit 1: blocking error.
 
-### scripts/compute_metrics.py
+### scripts/pipeline/compute_metrics.py
 - **Reads**: all data files
 - **Prints**: performance summary, ranking table, holdings table
 - **Writes**: appends to `data/portfolio/performance.csv`
 - **Args**: none
 
-### scripts/update_portfolio.py
+### scripts/pipeline/update_portfolio.py
 - **Args**: `--decisions PATH` (required), `--dry-run` (optional), `--init` (first run only)
 - **Reads**: decisions JSON, portfolio.json, latest prices CSV
 - **Writes**: portfolio.json (in-place)
 
-### scripts/backtest.py
+### scripts/backtest/backtest.py
 - **Args**: `--months N` (optional integer, 1–MAX_MONTHS; prompts interactively if omitted)
 - **Writes**:
   - `data/backtest/backtest_YYYYMMDD_Nmo.csv` — weekly NAV & return series
@@ -248,7 +239,7 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 ## Data Quality
 - Universe: N stocks, last updated YYYY-MM-DD
 - Prices: N symbols fetched, M missing/failed
-- Benchmark: latest value = X (date Y, source: TRI/price_index)
+- Benchmark: latest value = X (date Y, source: price_index_nse)
 - Fundamentals: N symbols with valid ROE+PB, M excluded
 - Validate output: PASS / PASS with warnings / FAILED
 - Any large-move flags or anomalies
@@ -256,7 +247,7 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 ## Performance Summary
 - This week: portfolio +X.X%  |  benchmark +X.X%  |  active +X.X%
 - Inception: portfolio +X.X% (INR +X,XXX, CAGR X.X%)  |  benchmark +X.X% (CAGR X.X%)  |  active CAGR +X.X%
-- [Note if benchmark is price index, not TRI]
+- NOTE: benchmark is price index (not TRI) — active return overstated by ~1.5%/yr
 
 ## Portfolio Snapshot (before rebalance)
 - NAV: INR X,XXX.XX
@@ -296,12 +287,12 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 
 - **Prices**: yfinance `.NS` tickers. FRAGILE — Yahoo Finance changes its API 2–3× per year.
   If >10% of held stocks have missing prices, do NOT rebalance. Stop and report.
-  `fetch_prices.py` prints the yfinance version — note it in the session log.
 
-- **Benchmark TRI**: no reliable free API. Primary source is NSE JSON endpoint.
-  Fallback is yfinance `^CNX250` (price index, not TRI). The price index is ~1.5%/yr
-  lower than TRI due to dividends — active return will appear ~1.5%/yr better than reality.
-  Always note which source was used.
+- **Benchmark**: Nifty LargeMidcap 250 **price index** (not TRI). The niftyindices.com
+  live JSON endpoint no longer publishes TRI values; no free real-time TRI source exists.
+  The price index understates the true benchmark return by ~1.5%/yr (the index dividend yield),
+  so active return will appear ~1.5%/yr better than reality. This is a permanent known limitation.
+  `fetch/fetch_benchmark.py` source will always be `price_index_nse` or `price_index_yfinance`.
 
 - **Fundamentals**: yfinance `.info` — 20–30% null rates for Indian stocks are normal.
   Stocks with missing ROE or PB are excluded from ranking, not imputed.

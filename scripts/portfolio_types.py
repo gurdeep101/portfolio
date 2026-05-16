@@ -95,7 +95,6 @@ class FundamentalsEntry(TypedDict, total=False):
     """
 
     pe_ratio: float | None
-    pb_ratio: float | None
     roe: float | None           # return on equity as a decimal (e.g. 0.15 = 15%)
     market_cap_cr: float | None # market cap in INR crore
     sector: str
