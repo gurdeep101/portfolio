@@ -88,19 +88,17 @@ class DecisionsFile(TypedDict):
 # ---------------------------------------------------------------------------
 
 class FundamentalsEntry(TypedDict, total=False):
-    """Fundamental data for one symbol, sourced from yfinance .info.
+    """Fundamental data for one symbol, sourced from NSE archives via nselib.
 
-    All financial fields are optional because yfinance returns None for
-    many Indian stocks (~20–30% null rate is expected).
+    All fields are optional — NSE archive data may be absent for some dates
+    (weekends, holidays, or symbols not listed at that time).
     """
 
     pe_ratio: float | None
-    roe: float | None           # return on equity as a decimal (e.g. 0.15 = 15%)
-    market_cap_cr: float | None # market cap in INR crore
     sector: str
-    fetch_date: str             # ISO date when this entry was last fetched
-    source: str                 # "yfinance"
-    error: str                  # set to "no_data" if yfinance returned nothing
+    fetch_date: str   # ISO date of the trading date used for this entry
+    source: str       # "nselib"
+    error: str        # set to "no_data" if fetch returned nothing
 
 
 # ---------------------------------------------------------------------------

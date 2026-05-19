@@ -1,0 +1,1502 @@
+{
+  "BHARTIARTL": {
+    "pe_ratio": null,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SBIN": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ADANIENT": {
+    "pe_ratio": null,
+    "sector": "Trading - Minerals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TMPV": {
+    "pe_ratio": null,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "RELIANCE": {
+    "pe_ratio": null,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MUTHOOTFIN": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "VEDL": {
+    "pe_ratio": null,
+    "sector": "Diversified Metals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BSE": {
+    "pe_ratio": null,
+    "sector": "Exchange and Data Platform",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ADANIPOWER": {
+    "pe_ratio": null,
+    "sector": "Integrated Power Utilities",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ADANIGREEN": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HDFCBANK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IDEA": {
+    "pe_ratio": null,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MCX": {
+    "pe_ratio": null,
+    "sector": "Exchange and Data Platform",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "INFY": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ICICIBANK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HAL": {
+    "pe_ratio": null,
+    "sector": "Aerospace & Defense",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ADANIPORTS": {
+    "pe_ratio": null,
+    "sector": "Port & Port services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DIXON": {
+    "pe_ratio": null,
+    "sector": "Consumer Electronics",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TCS": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "KOTAKBANK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATASTEEL": {
+    "pe_ratio": null,
+    "sector": "Iron & Steel",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "UNITDSPR": {
+    "pe_ratio": null,
+    "sector": "Breweries & Distilleries",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ADANIENSOL": {
+    "pe_ratio": null,
+    "sector": "Power Distribution",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JSWSTEEL": {
+    "pe_ratio": null,
+    "sector": "Iron & Steel",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HINDALCO": {
+    "pe_ratio": null,
+    "sector": "Aluminium",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "M&M": {
+    "pe_ratio": null,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BHEL": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SHRIRAMFIN": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BAJAJFINSV": {
+    "pe_ratio": null,
+    "sector": "Holding Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HINDZINC": {
+    "pe_ratio": null,
+    "sector": "Zinc",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "APOLLOTYRE": {
+    "pe_ratio": null,
+    "sector": "Tyres & Rubber Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HINDPETRO": {
+    "pe_ratio": null,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ATGL": {
+    "pe_ratio": null,
+    "sector": "LPG/CNG/PNG/LNG Supplier",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GROWW": {
+    "pe_ratio": null,
+    "sector": "Stockbroking & Allied",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CANBK": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SAIL": {
+    "pe_ratio": null,
+    "sector": "Iron & Steel",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GRASIM": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "COALINDIA": {
+    "pe_ratio": null,
+    "sector": "Coal",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LUPIN": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NLCINDIA": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AXISBANK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PERSISTENT": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BIOCON": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ETERNAL": {
+    "pe_ratio": null,
+    "sector": "E-Retail/ E-Commerce",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TITAN": {
+    "pe_ratio": null,
+    "sector": "Gems Jewellery And Watches",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DRREDDY": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ASHOKLEY": {
+    "pe_ratio": null,
+    "sector": "Commercial Vehicles",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HUDCO": {
+    "pe_ratio": null,
+    "sector": "Financial Institution",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TMCV": {
+    "pe_ratio": null,
+    "sector": "Commercial Vehicles",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HCLTECH": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "COFORGE": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SUNPHARMA": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "POWERINDIA": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SUZLON": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BPCL": {
+    "pe_ratio": null,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ONGC": {
+    "pe_ratio": null,
+    "sector": "Oil Exploration & Production",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TVSMOTOR": {
+    "pe_ratio": null,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "INDUSTOWER": {
+    "pe_ratio": null,
+    "sector": "Telecom - Infrastructure",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IOC": {
+    "pe_ratio": null,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NATIONALUM": {
+    "pe_ratio": null,
+    "sector": "Aluminium",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "OFSS": {
+    "pe_ratio": null,
+    "sector": "Software Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MARUTI": {
+    "pe_ratio": null,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "POLICYBZR": {
+    "pe_ratio": null,
+    "sector": "Financial Technology (Fintech)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MANKIND": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "WIPRO": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "VOLTAS": {
+    "pe_ratio": null,
+    "sector": "Household Appliances",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LT": {
+    "pe_ratio": null,
+    "sector": "Civil Construction",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BEL": {
+    "pe_ratio": null,
+    "sector": "Aerospace & Defense",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATACONSUM": {
+    "pe_ratio": null,
+    "sector": "Tea & Coffee",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TECHM": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BAJFINANCE": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ITC": {
+    "pe_ratio": null,
+    "sector": "Diversified FMCG",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TRENT": {
+    "pe_ratio": null,
+    "sector": "Speciality Retail",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MOTHERSON": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BANKBARODA": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NMDC": {
+    "pe_ratio": null,
+    "sector": "Industrial Minerals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ULTRACEMCO": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LTM": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CUMMINSIND": {
+    "pe_ratio": null,
+    "sector": "Compressors Pumps & Diesel Engines",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DIVISLAB": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LAURUSLABS": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NESTLEIND": {
+    "pe_ratio": null,
+    "sector": "Packaged Foods",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "COCHINSHIP": {
+    "pe_ratio": null,
+    "sector": "Ship Building & Allied Services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SOLARINDS": {
+    "pe_ratio": null,
+    "sector": "Explosives",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "KALYANKJIL": {
+    "pe_ratio": null,
+    "sector": "Gems Jewellery And Watches",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IDFCFIRSTB": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "YESBANK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BAJAJ-AUTO": {
+    "pe_ratio": null,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JIOFIN": {
+    "pe_ratio": null,
+    "sector": "Investment Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "POLYCAB": {
+    "pe_ratio": null,
+    "sector": "Cables - Electricals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HINDUNILVR": {
+    "pe_ratio": null,
+    "sector": "Diversified FMCG",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "POWERGRID": {
+    "pe_ratio": null,
+    "sector": "Power - Transmission",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "INDIGO": {
+    "pe_ratio": null,
+    "sector": "Airline",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ZYDUSLIFE": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IPCALAB": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ABCAPITAL": {
+    "pe_ratio": null,
+    "sector": "Investment Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ENRIN": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LICHSGFIN": {
+    "pe_ratio": null,
+    "sector": "Housing Finance Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CIPLA": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "VMM": {
+    "pe_ratio": null,
+    "sector": "Diversified Retail",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MAZDOCK": {
+    "pe_ratio": null,
+    "sector": "Ship Building & Allied Services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SWIGGY": {
+    "pe_ratio": null,
+    "sector": "E-Retail/ E-Commerce",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "INDIANB": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "APOLLOHOSP": {
+    "pe_ratio": null,
+    "sector": "Hospital",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "OIL": {
+    "pe_ratio": null,
+    "sector": "Oil Exploration & Production",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HEROMOTOCO": {
+    "pe_ratio": null,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LENSKART": {
+    "pe_ratio": null,
+    "sector": "Speciality Retail",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GODFRYPHLP": {
+    "pe_ratio": null,
+    "sector": "Cigarettes & Tobacco Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATAPOWER": {
+    "pe_ratio": null,
+    "sector": "Integrated Power Utilities",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "KEI": {
+    "pe_ratio": null,
+    "sector": "Cables - Electricals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "VBL": {
+    "pe_ratio": null,
+    "sector": "Other Beverages",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NTPC": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "EICHERMOT": {
+    "pe_ratio": null,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "WAAREEENER": {
+    "pe_ratio": null,
+    "sector": "Other Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IRFC": {
+    "pe_ratio": null,
+    "sector": "Financial Institution",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GODREJCP": {
+    "pe_ratio": null,
+    "sector": "Personal Care",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "RADICO": {
+    "pe_ratio": null,
+    "sector": "Breweries & Distilleries",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "FEDERALBNK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JSWENERGY": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HYUNDAI": {
+    "pe_ratio": null,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DLF": {
+    "pe_ratio": null,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PNB": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LICI": {
+    "pe_ratio": null,
+    "sector": "Life Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BANKINDIA": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HDFCLIFE": {
+    "pe_ratio": null,
+    "sector": "Life Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATAELXSI": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ABB": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TORNTPHARM": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TIINDIA": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ENDURANCE": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AUBANK": {
+    "pe_ratio": null,
+    "sector": "Other Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AUROPHARMA": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MEDANTA": {
+    "pe_ratio": null,
+    "sector": "Hospital",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PATANJALI": {
+    "pe_ratio": null,
+    "sector": "Edible Oil",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JINDALSTEL": {
+    "pe_ratio": null,
+    "sector": "Iron & Steel",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AMBUJACEM": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BDL": {
+    "pe_ratio": null,
+    "sector": "Aerospace & Defense",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GVT&D": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "INDHOTEL": {
+    "pe_ratio": null,
+    "sector": "Hotels & Resorts",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CHOLAFIN": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HDFCAMC": {
+    "pe_ratio": null,
+    "sector": "Asset Management Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PFC": {
+    "pe_ratio": null,
+    "sector": "Financial Institution",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CGPOWER": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PAYTM": {
+    "pe_ratio": null,
+    "sector": "Financial Technology (Fintech)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATACOMM": {
+    "pe_ratio": null,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IREDA": {
+    "pe_ratio": null,
+    "sector": "Financial Institution",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NYKAA": {
+    "pe_ratio": null,
+    "sector": "E-Retail/ E-Commerce",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ASIANPAINT": {
+    "pe_ratio": null,
+    "sector": "Paints",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SIEMENS": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "RVNL": {
+    "pe_ratio": null,
+    "sector": "Civil Construction",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "UNIONBANK": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "KPITTECH": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LGEINDIA": {
+    "pe_ratio": null,
+    "sector": "Household Appliances",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MAXHEALTH": {
+    "pe_ratio": null,
+    "sector": "Hospital",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "360ONE": {
+    "pe_ratio": null,
+    "sector": "Stockbroking & Allied",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MPHASIS": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MARICO": {
+    "pe_ratio": null,
+    "sector": "Edible Oil",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PAGEIND": {
+    "pe_ratio": null,
+    "sector": "Garments & Apparels",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NAUKRI": {
+    "pe_ratio": null,
+    "sector": "Internet & Catalogue Retail",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ICICIAMC": {
+    "pe_ratio": null,
+    "sector": "Asset Management Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SBILIFE": {
+    "pe_ratio": null,
+    "sector": "Life Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MAHABANK": {
+    "pe_ratio": null,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "APARINDS": {
+    "pe_ratio": null,
+    "sector": "Other Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BOSCHLTD": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "EXIDEIND": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BHARATFORG": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "INDUSINDBK": {
+    "pe_ratio": null,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PIIND": {
+    "pe_ratio": null,
+    "sector": "Pesticides & Agrochemicals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LTF": {
+    "pe_ratio": null,
+    "sector": "Investment Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LODHA": {
+    "pe_ratio": null,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "RECLTD": {
+    "pe_ratio": null,
+    "sector": "Financial Institution",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MFSL": {
+    "pe_ratio": null,
+    "sector": "Life Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NAM-INDIA": {
+    "pe_ratio": null,
+    "sector": "Asset Management Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "FORTIS": {
+    "pe_ratio": null,
+    "sector": "Hospital",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ESCORTS": {
+    "pe_ratio": null,
+    "sector": "Tractors",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NHPC": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ASTRAL": {
+    "pe_ratio": null,
+    "sector": "Plastic Products - Industrial",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HAVELLS": {
+    "pe_ratio": null,
+    "sector": "Consumer Electronics",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ITCHOTELS": {
+    "pe_ratio": null,
+    "sector": "Hotels & Resorts",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BRITANNIA": {
+    "pe_ratio": null,
+    "sector": "Packaged Foods",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BLUESTARCO": {
+    "pe_ratio": null,
+    "sector": "Household Appliances",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DMART": {
+    "pe_ratio": null,
+    "sector": "Diversified Retail",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GLENMARK": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "THERMAX": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JUBLFOOD": {
+    "pe_ratio": null,
+    "sector": "Restaurants",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GODREJPROP": {
+    "pe_ratio": null,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GMRAIRPORT": {
+    "pe_ratio": null,
+    "sector": "Airport & Airport services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PETRONET": {
+    "pe_ratio": null,
+    "sector": "LPG/CNG/PNG/LNG Supplier",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PREMIERENE": {
+    "pe_ratio": null,
+    "sector": "Other Electrical Equipment",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LLOYDSME": {
+    "pe_ratio": null,
+    "sector": "Industrial Minerals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NTPCGREEN": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TORNTPOWER": {
+    "pe_ratio": null,
+    "sector": "Integrated Power Utilities",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AJANTPHARM": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SRF": {
+    "pe_ratio": null,
+    "sector": "Specialty Chemicals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MOTILALOFS": {
+    "pe_ratio": null,
+    "sector": "Stockbroking & Allied",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "M&MFIN": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PIDILITIND": {
+    "pe_ratio": null,
+    "sector": "Specialty Chemicals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "UPL": {
+    "pe_ratio": null,
+    "sector": "Pesticides & Agrochemicals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DABUR": {
+    "pe_ratio": null,
+    "sector": "Personal Care",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BHARTIHEXA": {
+    "pe_ratio": null,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AWL": {
+    "pe_ratio": null,
+    "sector": "Edible Oil",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "UNOMINDA": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "UBL": {
+    "pe_ratio": null,
+    "sector": "Breweries & Distilleries",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HEXT": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "DALBHARAT": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ICICIGI": {
+    "pe_ratio": null,
+    "sector": "General Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATACAP": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GAIL": {
+    "pe_ratio": null,
+    "sector": "Gas Transmission/Marketing",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ABBOTINDIA": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "MRF": {
+    "pe_ratio": null,
+    "sector": "Tyres & Rubber Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SJVN": {
+    "pe_ratio": null,
+    "sector": "Power Generation",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "APLAPOLLO": {
+    "pe_ratio": null,
+    "sector": "Iron & Steel Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "COROMANDEL": {
+    "pe_ratio": null,
+    "sector": "Fertilizers",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PRESTIGE": {
+    "pe_ratio": null,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GODREJIND": {
+    "pe_ratio": null,
+    "sector": "Diversified",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ICICIPRULI": {
+    "pe_ratio": null,
+    "sector": "Life Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ALKEM": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CONCOR": {
+    "pe_ratio": null,
+    "sector": "Logistics Solution Provider",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "IRCTC": {
+    "pe_ratio": null,
+    "sector": "Tour Travel Related Services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BERGEPAINT": {
+    "pe_ratio": null,
+    "sector": "Paints",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SUPREMEIND": {
+    "pe_ratio": null,
+    "sector": "Plastic Products - Industrial",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "COLPAL": {
+    "pe_ratio": null,
+    "sector": "Personal Care",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "NIACL": {
+    "pe_ratio": null,
+    "sector": "General Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "OBEROIRLTY": {
+    "pe_ratio": null,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BAJAJHFL": {
+    "pe_ratio": null,
+    "sector": "Housing Finance Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BAJAJHLDNG": {
+    "pe_ratio": null,
+    "sector": "Holding Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JSL": {
+    "pe_ratio": null,
+    "sector": "Iron & Steel",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JSWINFRA": {
+    "pe_ratio": null,
+    "sector": "Port & Port services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "PHOENIXLTD": {
+    "pe_ratio": null,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SBICARD": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "TATAINVEST": {
+    "pe_ratio": null,
+    "sector": "Investment Company",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HDBFS": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AIIL": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ANTHEM": {
+    "pe_ratio": null,
+    "sector": "Biotechnology",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "CRISIL": {
+    "pe_ratio": null,
+    "sector": "Other Financial Services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SHREECEM": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LTTS": {
+    "pe_ratio": null,
+    "sector": "IT Enabled Services",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "ACC": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "KPRMILL": {
+    "pe_ratio": null,
+    "sector": "Other Textile Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GLAXO": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "JKCEMENT": {
+    "pe_ratio": null,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "LINDEINDIA": {
+    "pe_ratio": null,
+    "sector": "Industrial Gases",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SCHAEFFLER": {
+    "pe_ratio": null,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "HONAUT": {
+    "pe_ratio": null,
+    "sector": "Industrial Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "BALKRISIND": {
+    "pe_ratio": null,
+    "sector": "Tyres & Rubber Products",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "SUNDARMFIN": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "GICRE": {
+    "pe_ratio": null,
+    "sector": "General Insurance",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "FLUOROCHEM": {
+    "pe_ratio": null,
+    "sector": "Specialty Chemicals",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "AIAENG": {
+    "pe_ratio": null,
+    "sector": "Castings & Forgings",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  },
+  "3MINDIA": {
+    "pe_ratio": null,
+    "sector": "Diversified",
+    "fetch_date": "2019-10-06",
+    "source": "nselib"
+  }
+}

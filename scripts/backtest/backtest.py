@@ -8,8 +8,9 @@ Output:
   data/backtest/backtest_YYYYMMDD_Nmo.csv  — one row per weekly rebalance
 
 LIMITATIONS (read before interpreting results):
-  1. Fundamentals look-ahead bias: current P/B and ROE are used for all historical
-     weeks. Past performance may differ if fundamentals have changed significantly.
+  1. P/E fundamentals are loaded per ISO week where data exists. If a week's
+     file is missing, the latest earlier P/E file is used; weeks before the
+     first P/E file have no ranking-driven trades.
   2. Survivorship bias: only current Nifty 250 constituents are simulated; stocks
      delisted or removed from the index are absent from all historical weeks.
   3. Benchmark is ^CNX250 price index (not TRI); active return appears ~1.5 %/yr
@@ -35,6 +36,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pipeline.compute_metrics import compute_rankings
 from portfolio_types import BacktestAnnualTax, BacktestTradeEntry, BacktestWeekResult, FundamentalsEntry
+
+WeeklyFundamentals = dict[str, dict[str, FundamentalsEntry]]
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 PRICES_DIR = DATA_DIR / "market" / "prices"
@@ -197,18 +200,37 @@ def load_or_extend_price_history(
     def _covers(df: pd.DataFrame | None) -> bool:
         return df is not None and not df.empty and df.index.min().date() <= required_start
 
-    if _covers(existing_close) and _covers(existing_low) and _covers(existing_high):
+    covers_close = _covers(existing_close)
+    covers_low = _covers(existing_low)
+    covers_high = _covers(existing_high)
+
+    if covers_close and covers_low and covers_high:
         print(f"Price history OK (earliest available: {existing_close.index.min().date()}).")  # type: ignore[union-attr]
         return existing_close, existing_low, existing_high  # type: ignore[return-value]
 
     if existing_close is not None and not existing_close.empty:
         earliest = existing_close.index.min().date()
-        print(
-            f"Price history starts {earliest}, need back to {required_start}. "
-            f"Fetching {(earliest - required_start).days} additional calendar days…"
-        )
         fetch_start = required_start - timedelta(days=7)
-        fetch_end = earliest - timedelta(days=1)
+        if covers_close:
+            missing = []
+            if not covers_low:
+                missing.append(DAILY_LOW_FILE.name)
+            if not covers_high:
+                missing.append(DAILY_HIGH_FILE.name)
+            fetch_end = date.today()
+            print(
+                f"Adj-close history covers {required_start}, but "
+                f"{', '.join(missing)} missing/short. Fetching auxiliary history "
+                f"from {fetch_start}…"
+            )
+        else:
+            fetch_end = earliest - timedelta(days=1)
+            if fetch_end < fetch_start:
+                fetch_end = date.today()
+            print(
+                f"Price history starts {earliest}, need back to {required_start}. "
+                f"Fetching {(fetch_end - fetch_start).days} calendar days…"
+            )
     else:
         fetch_start = required_start - timedelta(days=7)
         fetch_end = date.today()
@@ -253,31 +275,77 @@ def load_or_extend_price_history(
     return combined_close, combined_low, combined_high
 
 
-def load_fundamentals() -> dict[str, FundamentalsEntry]:
-    """Load the newest fundamentals JSON file from data/market/fundamentals/.
+def iso_week_str(d: date | pd.Timestamp) -> str:
+    """Return an ISO year-week string (e.g. '2026-18') for a date-like value."""
+    d_date = d.date() if isinstance(d, pd.Timestamp) else d
+    iso = d_date.isocalendar()
+    return f"{iso.year}-{iso.week:02d}"
 
-    Warns about look-ahead bias. Returns an empty dict if no file exists;
-    rankings will be based on momentum factors only in that case.
+
+def load_weekly_fundamentals() -> WeeklyFundamentals:
+    """Load all weekly PE fundamentals files from data/market/fundamentals/.
+
+    Returns a mapping of ISO week string to symbol fundamentals. Rankings use
+    only pe_ratio via compute_rankings(); stale extra fields in older JSON files
+    are ignored by the ranking path.
     """
-    files = sorted(FUNDAMENTALS_DIR.glob("*.json"), reverse=True)
+    files = sorted(FUNDAMENTALS_DIR.glob("[0-9][0-9][0-9][0-9]-[0-9][0-9].json"))
+    weekly: WeeklyFundamentals = {}
+    unreadable = 0
+
     for f in files:
         try:
             with open(f) as fh:
                 data: dict[str, FundamentalsEntry] = json.load(fh)
-            print(
-                f"Loaded fundamentals from {f.name}.\n"
-                "  NOTE: current P/B and ROE applied to all historical weeks "
-                "(look-ahead bias — see module docstring)."
-            )
-            return data
-        except (OSError, json.JSONDecodeError):
-            continue
+            weekly[f.stem] = data
+        except (OSError, json.JSONDecodeError) as exc:
+            unreadable += 1
+            print(f"  WARNING: Skipping unreadable fundamentals file {f.name}: {exc}")
 
-    print(
-        "WARNING: No fundamentals file found. "
-        "Rankings will use momentum factors only (quality/value weights inactive)."
+    if not weekly:
+        print(
+            "WARNING: No weekly PE fundamentals files found. "
+            "Rankings cannot be computed, so no ranking-driven trades will occur."
+        )
+        return {}
+
+    weeks_with_pe = sum(
+        1
+        for data in weekly.values()
+        if any(
+            not info.get("error")
+            and info.get("pe_ratio") is not None
+            and info.get("pe_ratio", 0) > 0
+            for info in data.values()
+        )
     )
-    return {}
+    msg = (
+        f"Loaded {len(weekly)} weekly PE fundamentals files "
+        f"({weeks_with_pe} with positive P/E coverage). "
+        "Missing simulation weeks will use the latest prior file."
+    )
+    if unreadable:
+        msg += f" Skipped {unreadable} unreadable file(s)."
+    print(msg)
+    return weekly
+
+
+def select_fundamentals_for_week(
+    weekly_fundamentals: WeeklyFundamentals,
+    week_ts: date | pd.Timestamp,
+) -> dict[str, FundamentalsEntry] | None:
+    """Return fundamentals for week_ts, falling back to the latest prior week."""
+    if not weekly_fundamentals:
+        return None
+
+    week_key = iso_week_str(week_ts)
+    if week_key in weekly_fundamentals:
+        return weekly_fundamentals[week_key]
+
+    prior_weeks = [key for key in weekly_fundamentals if key <= week_key]
+    if not prior_weeks:
+        return None
+    return weekly_fundamentals[max(prior_weeks)]
 
 
 def fetch_benchmark_history(start: date, end: date) -> pd.Series:
@@ -508,7 +576,7 @@ def run_backtest(
     daily_prices: pd.DataFrame,
     daily_low: pd.DataFrame,
     daily_high: pd.DataFrame,
-    fundamentals: dict[str, FundamentalsEntry],
+    weekly_fundamentals: WeeklyFundamentals,
     benchmark_series: pd.Series,
 ) -> tuple[list[BacktestWeekResult], list[BacktestTradeEntry], dict[int, float]]:
     """Simulate the strategy week-by-week.
@@ -554,9 +622,14 @@ def run_backtest(
             if pd.notna(val) and float(val) > 0
         }
 
+        week_fundamentals = select_fundamentals_for_week(weekly_fundamentals, week_ts)
+
         # Cap to last 300 rows: momentum/MA algorithms need at most ~300 trading days.
         ranking_window = prices_window.iloc[max(0, len(prices_window) - 300):]
-        rankings, _ = compute_rankings(fundamentals, ranking_window)
+        if week_fundamentals is not None:
+            rankings, _ = compute_rankings(week_fundamentals, ranking_window)
+        else:
+            rankings = pd.DataFrame()
 
         nav_before = _compute_nav(state, current_prices)
         week_sell_gross: float = 0.0
@@ -1102,7 +1175,8 @@ def _print_summary(results: list[BacktestWeekResult]) -> None:
     )
     print(f"{'CAGR':<34} {_fmt(cagr, '%'):>12} {_fmt(bm_cagr, '%'):>12}")
     print(f"{'Max drawdown':<34} {_fmt(-max_dd, '%'):>12}")
-    print(f"{'Sharpe (ann., rf={RISK_FREE_RATE_ANNUAL_PCT:.1f}%)':<34} {_fmt(sharpe):>12}")
+    sharpe_label = f"Sharpe (ann., rf={RISK_FREE_RATE_ANNUAL_PCT:.1f}%)"
+    print(f"{sharpe_label:<34} {_fmt(sharpe):>12}")
     print(f"{'Sortino (ann.)':<34} {_fmt(sortino):>12}")
     print(f"{'Calmar (CAGR/MaxDD)':<34} {_fmt(calmar):>12}")
     print(f"{'Information ratio':<34} {_fmt(info_ratio):>12}")
@@ -1118,8 +1192,9 @@ def _print_summary(results: list[BacktestWeekResult]) -> None:
     print(f"  Avg weekly turnover:     {avg_turnover:.1f}%")
     print()
     print(
-        "  ⚠  Results use current fundamentals (look-ahead bias) and current\n"
-        "     Nifty 250 universe (survivorship bias). Treat with caution."
+        "  NOTE: Results use weekly PE fundamentals where available, with latest-prior\n"
+        "        fallback for missing weeks. Current Nifty 250 universe creates\n"
+        "        survivorship bias, so treat results with caution."
     )
 
 
@@ -1145,8 +1220,8 @@ def main() -> None:
         description="Backtest the nifty_agent strategy over a historical period.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "LIMITATIONS: uses current fundamentals (look-ahead bias) and current\n"
-            "Nifty 250 universe (survivorship bias). See module docstring for details."
+            "LIMITATIONS: uses weekly PE fundamentals with latest-prior fallback and\n"
+            "the current Nifty 250 universe (survivorship bias). See module docstring."
         ),
     )
     parser.add_argument(
@@ -1174,13 +1249,13 @@ def main() -> None:
     print(f"  Universe:     {len(universe)} symbols")
 
     daily_prices, daily_low, daily_high = load_or_extend_price_history(data_start, universe)
-    fundamentals = load_fundamentals()
+    weekly_fundamentals = load_weekly_fundamentals()
 
     print("Fetching benchmark history (^CNX250)…")
     benchmark_series = fetch_benchmark_history(backtest_start - timedelta(days=7), today)
 
     results, trades, realized_pnl_by_year = run_backtest(
-        num_months, daily_prices, daily_low, daily_high, fundamentals, benchmark_series
+        num_months, daily_prices, daily_low, daily_high, weekly_fundamentals, benchmark_series
     )
 
     if not results:

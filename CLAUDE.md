@@ -46,8 +46,9 @@ If it fails, note it in the session log and skip benchmark comparison this sessi
 ```
 uv run python scripts/fetch/fetch_fundamentals.py
 ```
-The script skips symbols fetched within the last 7 days. On first run, expect 5–15 minutes.
-If it fails entirely, use the most recent `data/market/fundamentals/` file and log a warning.
+The script writes missing weekly PE files for every weekly prices CSV. It exits 0 if all
+weeks already have fundamentals. If it fails entirely, use the most recent prior
+`data/market/fundamentals/YYYY-WW.json` file and log a warning.
 
 **Step 6 — Validate data (gate)**
 ```
@@ -66,7 +67,7 @@ Read the full output. This script also writes a row to `data/portfolio/performan
 Pay attention to:
 - Performance summary (weekly return, inception return, CAGR vs benchmark)
 - The full ranking table and which stocks are BUY_CANDIDATE / SELL_CANDIDATE / HELD
-- Excluded stocks (missing ROE/PB or insufficient history) — note the count
+- Excluded stocks (missing P/E or insufficient history) — note the count
 
 **Step 8 — Reason and decide**
 Apply the Investment Strategy below. Think through:
@@ -145,12 +146,10 @@ Rank all eligible Nifty 250 stocks by composite score each week. Total weight = 
 |---|---|---|
 | Long-term momentum | 20% | (52-week return) − (4-week return), normalised |
 | Near-term momentum | 20% | (50-DMA − 200-DMA) / 200-DMA, normalised |
-| Quality (ROE) | 30% | ROE normalised across eligible universe |
-| Value (1/PB) | 30% | 1/PB normalised across eligible universe |
+| Value (earnings yield) | 60% | 1/PE normalised across eligible universe |
 
 **Eligibility**: a stock is excluded from ranking (and cannot be bought) if:
-- ROE is missing
-- P/B ratio is missing
+- P/E ratio is missing or <= 0
 - Fewer than 200 days of price history available
 
 **Target portfolio**: top 15 eligible stocks by composite score, weighted by score, capped at 20%.
@@ -193,13 +192,12 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Primary source**: NSE live JSON endpoint for TRI; falls back to NSE price index via nselib, then yfinance `^CNX250`.
 
 ### scripts/fetch/fetch_fundamentals.py
-- **Writes**: `data/market/fundamentals/YYYY-WW.json` for each week in `data/market/prices/` that lacks a fundamentals file; appends to `data/market/missing_fundamentals_log.csv` (current week only)
+- **Writes**: `data/market/fundamentals/YYYY-WW.json` for each week in `data/market/prices/` that lacks a fundamentals file
 - **Args**: `--force` — re-fetch and overwrite all existing files
-- **Behaviour by week type**:
-  - **Current ISO week**: fetches via yfinance (P/E, P/B, ROE, market_cap). Source = `"yfinance"`. Runtime: 5–15 minutes on full run; much faster with warm cache.
-  - **Historical weeks**: fetches real point-in-time P/E from NSE archives via `nselib.capital_market.pe_ratio(date)`. P/B, ROE, and market_cap are `null` — not available from any free historical source. Source = `"nselib"`. Runtime: fast (one network call per week).
-- **Date fallback**: for historical weeks, tries the week's trading date then steps back up to 3 days to skip weekends/holidays.
-- **Early exit**: prints a message and exits 0 if all price weeks already have a fundamentals file (use `--force` to override).
+- **Data**: fetches real point-in-time P/E from NSE archives via `nselib.capital_market.pe_ratio(date)` using each week's actual trading date. Only `pe_ratio` is written; no other fundamental fields. Source = `"nselib"`.
+- **Date fallback**: tries the week's trading date then steps back up to 3 days to skip weekends/holidays.
+- **Runtime**: fast — one network call per week.
+- **Early exit**: exits 0 if all price weeks already have a fundamentals file (use `--force` to override).
 
 ### scripts/pipeline/validate_data.py
 - **Reads**: prices, benchmark, universe, portfolio.json
@@ -218,13 +216,18 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Writes**: portfolio.json (in-place)
 
 ### scripts/backtest/backtest.py
-- **Args**: `--months N` (optional integer, 1–MAX_MONTHS; prompts interactively if omitted)
+- **Args**: `--months N` (optional integer, 1–60; prompts interactively if omitted)
+- **Data window**: simulates the requested months back from today and loads an extra
+  420 calendar days for momentum / moving-average warm-up.
+- **Fundamentals**: uses the PE file for each ISO week where available; if that week
+  is missing, falls back to the latest prior PE file. Weeks before the first PE file
+  have no ranking-driven trades. Only `pe_ratio` is used.
 - **Writes**:
   - `data/backtest/backtest_YYYYMMDD_Nmo.csv` — weekly NAV & return series
   - `data/backtest/backtest_YYYYMMDD_Nmo_trades.csv` — per-trade execution log
   - `data/backtest/backtest_YYYYMMDD_Nmo_monthly.csv` — monthly return matrix
   - `data/backtest/backtest_YYYYMMDD_Nmo_tax.csv` — annual realized-gain tax table
-- **Limitations**: uses current fundamentals (look-ahead bias) and current Nifty 250 universe (survivorship bias). Results are illustrative, not authoritative.
+- **Limitations**: uses the current Nifty 250 universe (survivorship bias). Results are illustrative, not authoritative.
 - **When to use**: ad-hoc, outside the weekly session protocol.
 
 ---
@@ -240,7 +243,7 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 - Universe: N stocks, last updated YYYY-MM-DD
 - Prices: N symbols fetched, M missing/failed
 - Benchmark: latest value = X (date Y, source: price_index_nse)
-- Fundamentals: N symbols with valid ROE+PB, M excluded
+- Fundamentals: N symbols with valid P/E, M excluded
 - Validate output: PASS / PASS with warnings / FAILED
 - Any large-move flags or anomalies
 
@@ -285,8 +288,10 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 - **data/universe/universe.csv**: downloaded from NSE archive. FRAGILE — NSE blocks scrapers.
   If download fails, keep existing file. Check if symbol count changed after a successful refresh.
 
-- **Prices**: yfinance `.NS` tickers. FRAGILE — Yahoo Finance changes its API 2–3× per year.
-  If >10% of held stocks have missing prices, do NOT rebalance. Stop and report.
+- **Prices**: `fetch/fetch_nsepy_price.py` uses nselib first, jugaad-data second,
+  and yfinance `.NS` tickers only as a tertiary fallback. FRAGILE — NSE blocks
+  scrapers and Yahoo Finance changes its API 2–3× per year. If >10% of held
+  stocks have missing prices, do NOT rebalance. Stop and report.
 
 - **Benchmark**: Nifty LargeMidcap 250 **price index** (not TRI). The niftyindices.com
   live JSON endpoint no longer publishes TRI values; no free real-time TRI source exists.
@@ -294,9 +299,10 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
   so active return will appear ~1.5%/yr better than reality. This is a permanent known limitation.
   `fetch/fetch_benchmark.py` source will always be `price_index_nse` or `price_index_yfinance`.
 
-- **Fundamentals**: yfinance `.info` — 20–30% null rates for Indian stocks are normal.
-  Stocks with missing ROE or PB are excluded from ranking, not imputed.
-  Check `data/market/missing_fundamentals_log.csv` if exclusion rate seems unusually high.
+- **Fundamentals**: P/E only, sourced from NSE archives via nselib.
+  Stocks with missing or non-positive P/E are excluded from ranking, not imputed.
+  Backtests use weekly PE files with latest-prior fallback for missing weeks; no
+  other fundamental fields are used.
 
 - **Corporate actions**: not automated. Manually check the NSE announcements page
   for held stocks before any session. Flag any splits, bonuses, or mergers in the log.

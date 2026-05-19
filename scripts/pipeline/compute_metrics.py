@@ -10,7 +10,7 @@ Reads:
   data/market/fundamentals/YYYY-WW.json   (latest available week)
 
 Stocks are excluded from ranking (and cannot be bought) if:
-  - ROE is missing or None
+  - P/E ratio is missing, null, or <= 0
   - Fewer than MIN_HISTORY_DAYS of daily price history are available
 """
 
@@ -48,7 +48,7 @@ MIN_HISTORY_DAYS = 200         # minimum daily price history required for MA cal
 WEIGHTS: dict[str, float] = {
     "lt_momentum": 0.20,   # long-term momentum (12-1 month return)
     "nt_momentum": 0.20,   # near-term momentum (50-DMA vs 200-DMA)
-    "quality": 0.60,       # ROE normalised across eligible universe
+    "value": 0.60,         # earnings yield (1/PE) normalised across eligible universe
 }
 
 
@@ -229,8 +229,8 @@ def compute_rankings(
 ) -> tuple[pd.DataFrame, list[tuple[str, str]]]:
     """Compute composite factor rankings for all eligible symbols.
 
-    Symbols are excluded from ranking (and cannot be bought) if ROE is
-    missing, or if there is insufficient price history for MA calculation.
+    Symbols are excluded from ranking (and cannot be bought) if P/E is
+    missing or <= 0, or if there is insufficient price history for MA calculation.
 
     Args:
         fundamentals: Mapping of symbol → FundamentalsEntry.
@@ -252,16 +252,16 @@ def compute_rankings(
         if info.get("error"):
             excluded.append((sym, "no_data"))
             continue
-        roe = info.get("roe")
-        if roe is None:
-            excluded.append((sym, "missing_roe"))
+        pe = info.get("pe_ratio")
+        if pe is None or pe <= 0:
+            excluded.append((sym, "missing_pe"))
             continue
         if sym not in lt_mom.index or sym not in nt_mom.index:
             excluded.append((sym, "insufficient_price_history"))
             continue
         rows.append({
             "symbol": sym,
-            "roe": roe,
+            "earnings_yield": 1.0 / pe,
             "lt_momentum_raw": lt_mom[sym],
             "nt_momentum_raw": nt_mom[sym],
             "sector": info.get("sector", "Unknown"),
@@ -275,12 +275,12 @@ def compute_rankings(
     # Normalise each factor to [0, 1] across the eligible universe.
     df["lt_momentum"] = normalise_series(df["lt_momentum_raw"])
     df["nt_momentum"] = normalise_series(df["nt_momentum_raw"])
-    df["quality"] = normalise_series(df["roe"])
+    df["value"] = normalise_series(df["earnings_yield"])
 
     df["composite"] = (
         df["lt_momentum"] * WEIGHTS["lt_momentum"]
         + df["nt_momentum"] * WEIGHTS["nt_momentum"]
-        + df["quality"] * WEIGHTS["quality"]
+        + df["value"] * WEIGHTS["value"]
     )
     df = df.sort_values("composite", ascending=False)
     df["rank"] = range(1, len(df) + 1)
@@ -544,7 +544,7 @@ def main() -> None:
                 sym,
                 f"{row['lt_momentum']:.3f}",
                 f"{row['nt_momentum']:.3f}",
-                f"{row['quality']:.3f}",
+                f"{row['value']:.3f}",
                 f"{row['composite']:.3f}",
                 row["ma_signal"],
                 row["status"],
@@ -557,7 +557,7 @@ def main() -> None:
         print("=" * 70)
         print(tabulate(
             table_data,
-            headers=["Rank", "Symbol", "LT Mom", "NT Mom", "Quality",
+            headers=["Rank", "Symbol", "LT Mom", "NT Mom", "Value",
                      "Composite", "MA", "Status"],
             tablefmt="simple",
         ))

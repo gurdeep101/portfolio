@@ -157,10 +157,7 @@ def update_daily_file(df: pd.DataFrame, force: bool = False) -> None:
             print(f"ERROR: Could not read existing daily_adj_close.csv: {e}")
             sys.exit(1)
 
-        if force:
-            new_rows = pivot
-        else:
-            new_rows = pivot[~pivot.index.isin(existing.index)]
+        new_rows = pivot if force else pivot[~pivot.index.isin(existing.index)]
 
         if new_rows.empty:
             last_date = existing.index.max()
@@ -515,9 +512,9 @@ def fetch_failed_via_jugaad(
 
 # ── SOURCE 3: yfinance fallback ───────────────────────────────────────────────
 # Last resort for symbols that both NSE-native libraries could not fetch.
-# Uses per-symbol Ticker.history() (v8/chart endpoint) rather than the batch
-# yf.download() used in fetch_prices.py — simpler and sufficient for a small
-# set of stragglers. Provides adjusted close prices unlike NSE sources.
+# Uses per-symbol Ticker.history() (v8/chart endpoint), which is simpler and
+# sufficient for a small set of stragglers. Provides adjusted close prices
+# unlike NSE sources.
 
 
 def _normalise_yf_ticker_df(raw_df: pd.DataFrame, symbol: str) -> pd.DataFrame:
@@ -773,7 +770,7 @@ def main() -> None:
             forward_range = (fwd_start, today)
             print(f"  Forward gap:   {fwd_start} to {today} (will download)")
         else:
-            print(f"  Forward gap:   none (already current)")
+            print("  Forward gap:   none (already current)")
 
     else:
         # First run — no existing data at all
@@ -829,7 +826,7 @@ def main() -> None:
         current_week_rows = df[
             pd.to_datetime(df["date"]).apply(lambda d: iso_week_str(d.date())) == week_str
         ]
-        print(f"  Would write snapshots for all ISO weeks in fetched data.")
+        print("  Would write snapshots for all ISO weeks in fetched data.")
         print(f"  Would write: {PRICES_DIR}/{week_str}.csv  ({len(current_week_rows)} rows for current week)")
         if args.force:
             print("  Would refresh overlapping dates in daily_adj_close.csv from fetched origin data.")

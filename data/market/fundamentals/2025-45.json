@@ -1,0 +1,1502 @@
+{
+  "BHARTIARTL": {
+    "pe_ratio": 30.58,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SBIN": {
+    "pe_ratio": 10.9,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ADANIENT": {
+    "pe_ratio": 66.37,
+    "sector": "Trading - Minerals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TMPV": {
+    "pe_ratio": 7.02,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "RELIANCE": {
+    "pe_ratio": 21.27,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MUTHOOTFIN": {
+    "pe_ratio": 21.15,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "VEDL": {
+    "pe_ratio": 10.12,
+    "sector": "Diversified Metals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BSE": {
+    "pe_ratio": 72.36,
+    "sector": "Exchange and Data Platform",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ADANIPOWER": {
+    "pe_ratio": 24.06,
+    "sector": "Integrated Power Utilities",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ADANIGREEN": {
+    "pe_ratio": 94.75,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HDFCBANK": {
+    "pe_ratio": 20.95,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IDEA": {
+    "pe_ratio": null,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MCX": {
+    "pe_ratio": null,
+    "sector": "Exchange and Data Platform",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "INFY": {
+    "pe_ratio": 22.47,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ICICIBANK": {
+    "pe_ratio": 17.01,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HAL": {
+    "pe_ratio": 37.43,
+    "sector": "Aerospace & Defense",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ADANIPORTS": {
+    "pe_ratio": 28.73,
+    "sector": "Port & Port services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DIXON": {
+    "pe_ratio": 66.26,
+    "sector": "Consumer Electronics",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TCS": {
+    "pe_ratio": 21.86,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "KOTAKBANK": {
+    "pe_ratio": 21.89,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATASTEEL": {
+    "pe_ratio": 55.43,
+    "sector": "Iron & Steel",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "UNITDSPR": {
+    "pe_ratio": 68.12,
+    "sector": "Breweries & Distilleries",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ADANIENSOL": {
+    "pe_ratio": 43.97,
+    "sector": "Power Distribution",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JSWSTEEL": {
+    "pe_ratio": 54.77,
+    "sector": "Iron & Steel",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HINDALCO": {
+    "pe_ratio": 10.49,
+    "sector": "Aluminium",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "M&M": {
+    "pe_ratio": 34.73,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BHEL": {
+    "pe_ratio": 397.16,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SHRIRAMFIN": {
+    "pe_ratio": 16.0,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BAJAJFINSV": {
+    "pe_ratio": 18.0,
+    "sector": "Holding Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HINDZINC": {
+    "pe_ratio": 19.58,
+    "sector": "Zinc",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "APOLLOTYRE": {
+    "pe_ratio": 39.37,
+    "sector": "Tyres & Rubber Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HINDPETRO": {
+    "pe_ratio": 9.42,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ATGL": {
+    "pe_ratio": 107.21,
+    "sector": "LPG/CNG/PNG/LNG Supplier",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GROWW": {
+    "pe_ratio": null,
+    "sector": "Stockbroking & Allied",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CANBK": {
+    "pe_ratio": 7.8,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SAIL": {
+    "pe_ratio": 22.56,
+    "sector": "Iron & Steel",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GRASIM": {
+    "pe_ratio": 22.2,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "COALINDIA": {
+    "pe_ratio": 7.11,
+    "sector": "Coal",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LUPIN": {
+    "pe_ratio": 24.2,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NLCINDIA": {
+    "pe_ratio": 11.99,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AXISBANK": {
+    "pe_ratio": 13.59,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PERSISTENT": {
+    "pe_ratio": 60.05,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BIOCON": {
+    "pe_ratio": 77.43,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ETERNAL": {
+    "pe_ratio": 987.95,
+    "sector": "E-Retail/ E-Commerce",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TITAN": {
+    "pe_ratio": 90.15,
+    "sector": "Gems Jewellery And Watches",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DRREDDY": {
+    "pe_ratio": 17.57,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ASHOKLEY": {
+    "pe_ratio": 24.02,
+    "sector": "Commercial Vehicles",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HUDCO": {
+    "pe_ratio": 16.6,
+    "sector": "Financial Institution",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TMCV": {
+    "pe_ratio": null,
+    "sector": "Commercial Vehicles",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HCLTECH": {
+    "pe_ratio": 24.16,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "COFORGE": {
+    "pe_ratio": 53.87,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SUNPHARMA": {
+    "pe_ratio": 38.98,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "POWERINDIA": {
+    "pe_ratio": 184.08,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SUZLON": {
+    "pe_ratio": 37.57,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BPCL": {
+    "pe_ratio": 10.46,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ONGC": {
+    "pe_ratio": 7.92,
+    "sector": "Oil Exploration & Production",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TVSMOTOR": {
+    "pe_ratio": 63.31,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "INDUSTOWER": {
+    "pe_ratio": 10.85,
+    "sector": "Telecom - Infrastructure",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IOC": {
+    "pe_ratio": 16.43,
+    "sector": "Refineries & Marketing",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NATIONALUM": {
+    "pe_ratio": 7.45,
+    "sector": "Aluminium",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "OFSS": {
+    "pe_ratio": 29.22,
+    "sector": "Software Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MARUTI": {
+    "pe_ratio": 34.01,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "POLICYBZR": {
+    "pe_ratio": 217.76,
+    "sector": "Financial Technology (Fintech)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MANKIND": {
+    "pe_ratio": 48.99,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "WIPRO": {
+    "pe_ratio": 18.39,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "VOLTAS": {
+    "pe_ratio": 57.35,
+    "sector": "Household Appliances",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LT": {
+    "pe_ratio": 28.75,
+    "sector": "Civil Construction",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BEL": {
+    "pe_ratio": 55.39,
+    "sector": "Aerospace & Defense",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATACONSUM": {
+    "pe_ratio": 81.76,
+    "sector": "Tea & Coffee",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TECHM": {
+    "pe_ratio": 30.08,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BAJFINANCE": {
+    "pe_ratio": 37.67,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ITC": {
+    "pe_ratio": 25.08,
+    "sector": "Diversified FMCG",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TRENT": {
+    "pe_ratio": 107.67,
+    "sector": "Speciality Retail",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MOTHERSON": {
+    "pe_ratio": 35.22,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BANKBARODA": {
+    "pe_ratio": 7.77,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NMDC": {
+    "pe_ratio": 9.95,
+    "sector": "Industrial Minerals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ULTRACEMCO": {
+    "pe_ratio": 49.79,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LTM": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CUMMINSIND": {
+    "pe_ratio": 63.4,
+    "sector": "Compressors Pumps & Diesel Engines",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DIVISLAB": {
+    "pe_ratio": 76.63,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LAURUSLABS": {
+    "pe_ratio": 105.35,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NESTLEIND": {
+    "pe_ratio": 77.44,
+    "sector": "Packaged Foods",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "COCHINSHIP": {
+    "pe_ratio": 53.99,
+    "sector": "Ship Building & Allied Services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SOLARINDS": {
+    "pe_ratio": 91.9,
+    "sector": "Explosives",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "KALYANKJIL": {
+    "pe_ratio": 66.13,
+    "sector": "Gems Jewellery And Watches",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IDFCFIRSTB": {
+    "pe_ratio": 51.04,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "YESBANK": {
+    "pe_ratio": 26.17,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BAJAJ-AUTO": {
+    "pe_ratio": 28.62,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JIOFIN": {
+    "pe_ratio": 150.64,
+    "sector": "Investment Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "POLYCAB": {
+    "pe_ratio": 50.6,
+    "sector": "Cables - Electricals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HINDUNILVR": {
+    "pe_ratio": 52.35,
+    "sector": "Diversified FMCG",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "POWERGRID": {
+    "pe_ratio": 16.2,
+    "sector": "Power - Transmission",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "INDIGO": {
+    "pe_ratio": 32.19,
+    "sector": "Airline",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ZYDUSLIFE": {
+    "pe_ratio": 20.48,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IPCALAB": {
+    "pe_ratio": 40.64,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ABCAPITAL": {
+    "pe_ratio": 29.13,
+    "sector": "Investment Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ENRIN": {
+    "pe_ratio": null,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LICHSGFIN": {
+    "pe_ratio": 5.71,
+    "sector": "Housing Finance Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CIPLA": {
+    "pe_ratio": 22.49,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "VMM": {
+    "pe_ratio": 114.54,
+    "sector": "Diversified Retail",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MAZDOCK": {
+    "pe_ratio": 53.04,
+    "sector": "Ship Building & Allied Services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SWIGGY": {
+    "pe_ratio": null,
+    "sector": "E-Retail/ E-Commerce",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "INDIANB": {
+    "pe_ratio": 10.9,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "APOLLOHOSP": {
+    "pe_ratio": 68.87,
+    "sector": "Hospital",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "OIL": {
+    "pe_ratio": 10.81,
+    "sector": "Oil Exploration & Production",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HEROMOTOCO": {
+    "pe_ratio": 23.41,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LENSKART": {
+    "pe_ratio": null,
+    "sector": "Speciality Retail",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GODFRYPHLP": {
+    "pe_ratio": 47.68,
+    "sector": "Cigarettes & Tobacco Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATAPOWER": {
+    "pe_ratio": 29.8,
+    "sector": "Integrated Power Utilities",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "KEI": {
+    "pe_ratio": 50.73,
+    "sector": "Cables - Electricals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "VBL": {
+    "pe_ratio": 55.14,
+    "sector": "Other Beverages",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NTPC": {
+    "pe_ratio": 13.99,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "EICHERMOT": {
+    "pe_ratio": 45.45,
+    "sector": "2/3 Wheelers",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "WAAREEENER": {
+    "pe_ratio": 40.97,
+    "sector": "Other Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IRFC": {
+    "pe_ratio": 23.77,
+    "sector": "Financial Institution",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GODREJCP": {
+    "pe_ratio": 61.91,
+    "sector": "Personal Care",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "RADICO": {
+    "pe_ratio": 111.22,
+    "sector": "Breweries & Distilleries",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "FEDERALBNK": {
+    "pe_ratio": 14.21,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JSWENERGY": {
+    "pe_ratio": 40.1,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HYUNDAI": {
+    "pe_ratio": 34.24,
+    "sector": "Passenger Cars & Utility Vehicles",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DLF": {
+    "pe_ratio": 68.68,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PNB": {
+    "pe_ratio": 9.04,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LICI": {
+    "pe_ratio": 12.0,
+    "sector": "Life Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BANKINDIA": {
+    "pe_ratio": 7.03,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HDFCLIFE": {
+    "pe_ratio": 85.87,
+    "sector": "Life Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATAELXSI": {
+    "pe_ratio": 43.3,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ABB": {
+    "pe_ratio": 59.1,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TORNTPHARM": {
+    "pe_ratio": 60.52,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TIINDIA": {
+    "pe_ratio": 55.49,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ENDURANCE": {
+    "pe_ratio": 46.77,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AUBANK": {
+    "pe_ratio": 31.05,
+    "sector": "Other Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AUROPHARMA": {
+    "pe_ratio": 19.1,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MEDANTA": {
+    "pe_ratio": 63.01,
+    "sector": "Hospital",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PATANJALI": {
+    "pe_ratio": 51.69,
+    "sector": "Edible Oil",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JINDALSTEL": {
+    "pe_ratio": 36.22,
+    "sector": "Iron & Steel",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AMBUJACEM": {
+    "pe_ratio": 25.91,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BDL": {
+    "pe_ratio": 94.63,
+    "sector": "Aerospace & Defense",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GVT&D": {
+    "pe_ratio": 102.86,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "INDHOTEL": {
+    "pe_ratio": 48.08,
+    "sector": "Hotels & Resorts",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CHOLAFIN": {
+    "pe_ratio": 32.21,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HDFCAMC": {
+    "pe_ratio": 44.68,
+    "sector": "Asset Management Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PFC": {
+    "pe_ratio": 3.88,
+    "sector": "Financial Institution",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CGPOWER": {
+    "pe_ratio": 109.63,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PAYTM": {
+    "pe_ratio": 291.52,
+    "sector": "Financial Technology (Fintech)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATACOMM": {
+    "pe_ratio": 36.82,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IREDA": {
+    "pe_ratio": 26.87,
+    "sector": "Financial Institution",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NYKAA": {
+    "pe_ratio": 838.06,
+    "sector": "E-Retail/ E-Commerce",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ASIANPAINT": {
+    "pe_ratio": 71.64,
+    "sector": "Paints",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SIEMENS": {
+    "pe_ratio": 53.09,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "RVNL": {
+    "pe_ratio": 60.91,
+    "sector": "Civil Construction",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "UNIONBANK": {
+    "pe_ratio": 6.34,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "KPITTECH": {
+    "pe_ratio": 39.07,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LGEINDIA": {
+    "pe_ratio": null,
+    "sector": "Household Appliances",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MAXHEALTH": {
+    "pe_ratio": 96.18,
+    "sector": "Hospital",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "360ONE": {
+    "pe_ratio": 40.87,
+    "sector": "Stockbroking & Allied",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MPHASIS": {
+    "pe_ratio": 29.93,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MARICO": {
+    "pe_ratio": 54.43,
+    "sector": "Edible Oil",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PAGEIND": {
+    "pe_ratio": 57.96,
+    "sector": "Garments & Apparels",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NAUKRI": {
+    "pe_ratio": 57.87,
+    "sector": "Internet & Catalogue Retail",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ICICIAMC": {
+    "pe_ratio": null,
+    "sector": "Asset Management Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SBILIFE": {
+    "pe_ratio": 80.54,
+    "sector": "Life Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MAHABANK": {
+    "pe_ratio": 7.88,
+    "sector": "Public Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "APARINDS": {
+    "pe_ratio": 37.72,
+    "sector": "Other Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BOSCHLTD": {
+    "pe_ratio": 40.77,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "EXIDEIND": {
+    "pe_ratio": 37.58,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BHARATFORG": {
+    "pe_ratio": 61.12,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "INDUSINDBK": {
+    "pe_ratio": 61.57,
+    "sector": "Private Sector Bank",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PIIND": {
+    "pe_ratio": 35.5,
+    "sector": "Pesticides & Agrochemicals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LTF": {
+    "pe_ratio": 28.55,
+    "sector": "Investment Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LODHA": {
+    "pe_ratio": 41.28,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "RECLTD": {
+    "pe_ratio": 5.69,
+    "sector": "Financial Institution",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MFSL": {
+    "pe_ratio": 166.02,
+    "sector": "Life Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NAM-INDIA": {
+    "pe_ratio": 40.09,
+    "sector": "Asset Management Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "FORTIS": {
+    "pe_ratio": 86.69,
+    "sector": "Hospital",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ESCORTS": {
+    "pe_ratio": 32.38,
+    "sector": "Tractors",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NHPC": {
+    "pe_ratio": 23.74,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ASTRAL": {
+    "pe_ratio": 87.41,
+    "sector": "Plastic Products - Industrial",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HAVELLS": {
+    "pe_ratio": 64.42,
+    "sector": "Consumer Electronics",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ITCHOTELS": {
+    "pe_ratio": 113.06,
+    "sector": "Hotels & Resorts",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BRITANNIA": {
+    "pe_ratio": 67.17,
+    "sector": "Packaged Foods",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BLUESTARCO": {
+    "pe_ratio": 65.98,
+    "sector": "Household Appliances",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DMART": {
+    "pe_ratio": 96.43,
+    "sector": "Diversified Retail",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GLENMARK": {
+    "pe_ratio": 67.81,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "THERMAX": {
+    "pe_ratio": 56.86,
+    "sector": "Heavy Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JUBLFOOD": {
+    "pe_ratio": 142.37,
+    "sector": "Restaurants",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GODREJPROP": {
+    "pe_ratio": 43.31,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GMRAIRPORT": {
+    "pe_ratio": null,
+    "sector": "Airport & Airport services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PETRONET": {
+    "pe_ratio": 11.58,
+    "sector": "LPG/CNG/PNG/LNG Supplier",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PREMIERENE": {
+    "pe_ratio": 44.58,
+    "sector": "Other Electrical Equipment",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LLOYDSME": {
+    "pe_ratio": 45.15,
+    "sector": "Industrial Minerals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NTPCGREEN": {
+    "pe_ratio": 166.38,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TORNTPOWER": {
+    "pe_ratio": 23.03,
+    "sector": "Integrated Power Utilities",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AJANTPHARM": {
+    "pe_ratio": 33.91,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SRF": {
+    "pe_ratio": 60.01,
+    "sector": "Specialty Chemicals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MOTILALOFS": {
+    "pe_ratio": 21.52,
+    "sector": "Stockbroking & Allied",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "M&MFIN": {
+    "pe_ratio": 19.56,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PIDILITIND": {
+    "pe_ratio": 67.14,
+    "sector": "Specialty Chemicals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "UPL": {
+    "pe_ratio": 39.6,
+    "sector": "Pesticides & Agrochemicals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DABUR": {
+    "pe_ratio": 52.45,
+    "sector": "Personal Care",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BHARTIHEXA": {
+    "pe_ratio": 64.11,
+    "sector": "Telecom - Cellular & Fixed line services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AWL": {
+    "pe_ratio": 32.49,
+    "sector": "Edible Oil",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "UNOMINDA": {
+    "pe_ratio": 76.44,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "UBL": {
+    "pe_ratio": 104.25,
+    "sector": "Breweries & Distilleries",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HEXT": {
+    "pe_ratio": null,
+    "sector": "Computers - Software & Consulting",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "DALBHARAT": {
+    "pe_ratio": 40.27,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ICICIGI": {
+    "pe_ratio": 50.77,
+    "sector": "General Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATACAP": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GAIL": {
+    "pe_ratio": 11.63,
+    "sector": "Gas Transmission/Marketing",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ABBOTINDIA": {
+    "pe_ratio": null,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "MRF": {
+    "pe_ratio": 37.43,
+    "sector": "Tyres & Rubber Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SJVN": {
+    "pe_ratio": 48.11,
+    "sector": "Power Generation",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "APLAPOLLO": {
+    "pe_ratio": 62.4,
+    "sector": "Iron & Steel Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "COROMANDEL": {
+    "pe_ratio": 27.7,
+    "sector": "Fertilizers",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PRESTIGE": {
+    "pe_ratio": 112.09,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GODREJIND": {
+    "pe_ratio": 23.57,
+    "sector": "Diversified",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ICICIPRULI": {
+    "pe_ratio": 70.55,
+    "sector": "Life Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ALKEM": {
+    "pe_ratio": 29.04,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CONCOR": {
+    "pe_ratio": 31.57,
+    "sector": "Logistics Solution Provider",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "IRCTC": {
+    "pe_ratio": 42.11,
+    "sector": "Tour Travel Related Services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BERGEPAINT": {
+    "pe_ratio": 55.92,
+    "sector": "Paints",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SUPREMEIND": {
+    "pe_ratio": 62.23,
+    "sector": "Plastic Products - Industrial",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "COLPAL": {
+    "pe_ratio": 42.3,
+    "sector": "Personal Care",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "NIACL": {
+    "pe_ratio": 25.92,
+    "sector": "General Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "OBEROIRLTY": {
+    "pe_ratio": 31.8,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BAJAJHFL": {
+    "pe_ratio": 40.31,
+    "sector": "Housing Finance Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BAJAJHLDNG": {
+    "pe_ratio": 68.97,
+    "sector": "Holding Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JSL": {
+    "pe_ratio": 23.49,
+    "sector": "Iron & Steel",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JSWINFRA": {
+    "pe_ratio": 36.45,
+    "sector": "Port & Port services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "PHOENIXLTD": {
+    "pe_ratio": 48.48,
+    "sector": "Residential Commercial Projects",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SBICARD": {
+    "pe_ratio": 44.19,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "TATAINVEST": {
+    "pe_ratio": 184.05,
+    "sector": "Investment Company",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HDBFS": {
+    "pe_ratio": null,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AIIL": {
+    "pe_ratio": 11.63,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ANTHEM": {
+    "pe_ratio": null,
+    "sector": "Biotechnology",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "CRISIL": {
+    "pe_ratio": 47.47,
+    "sector": "Other Financial Services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SHREECEM": {
+    "pe_ratio": 66.33,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LTTS": {
+    "pe_ratio": 34.24,
+    "sector": "IT Enabled Services",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "ACC": {
+    "pe_ratio": 14.31,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "KPRMILL": {
+    "pe_ratio": 44.4,
+    "sector": "Other Textile Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GLAXO": {
+    "pe_ratio": 46.14,
+    "sector": "Pharmaceuticals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "JKCEMENT": {
+    "pe_ratio": 43.05,
+    "sector": "Cement & Cement Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "LINDEINDIA": {
+    "pe_ratio": 113.59,
+    "sector": "Industrial Gases",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SCHAEFFLER": {
+    "pe_ratio": 62.96,
+    "sector": "Auto Components & Equipments",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "HONAUT": {
+    "pe_ratio": 62.33,
+    "sector": "Industrial Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "BALKRISIND": {
+    "pe_ratio": 30.88,
+    "sector": "Tyres & Rubber Products",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "SUNDARMFIN": {
+    "pe_ratio": 29.31,
+    "sector": "Non Banking Financial Company (NBFC)",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "GICRE": {
+    "pe_ratio": 8.91,
+    "sector": "General Insurance",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "FLUOROCHEM": {
+    "pe_ratio": 63.83,
+    "sector": "Specialty Chemicals",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "AIAENG": {
+    "pe_ratio": 27.88,
+    "sector": "Castings & Forgings",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  },
+  "3MINDIA": {
+    "pe_ratio": 80.71,
+    "sector": "Diversified",
+    "fetch_date": "2025-11-09",
+    "source": "nselib"
+  }
+}

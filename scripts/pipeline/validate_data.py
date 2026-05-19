@@ -114,7 +114,7 @@ def main() -> None:
         prices_file = latest_prices_file()
         if prices_file is None:
             errors.append(
-                "No prices file found in data/market/prices/. Run fetch_prices.py."
+                "No prices file found in data/market/prices/. Run fetch_nsepy_price.py."
             )
         else:
             warnings.append(
@@ -197,13 +197,13 @@ def main() -> None:
                 )
 
     # -------------------------------------------------------------------------
-    # 5. Fundamentals / ROE data availability  (warning only)
+    # 5. Fundamentals / P/E data availability  (warning only)
     # -------------------------------------------------------------------------
     fundamentals_files = sorted(FUNDAMENTALS_DIR.glob("*.json"), reverse=True)
     if not fundamentals_files:
         warnings.append(
             "No fundamentals file found in data/market/fundamentals/. "
-            "Run fetch_fundamentals.py — rankings cannot be computed without ROE data."
+            "Run fetch_fundamentals.py — rankings cannot be computed without P/E data."
         )
     else:
         latest_fund = fundamentals_files[0]
@@ -211,14 +211,14 @@ def main() -> None:
             with open(latest_fund) as fh:
                 fund_data = json.load(fh)
             total = len(fund_data)
-            with_roe = sum(
+            with_pe = sum(
                 1 for v in fund_data.values()
-                if not v.get("error") and v.get("roe") is not None
+                if not v.get("error") and v.get("pe_ratio") is not None and v.get("pe_ratio", 0) > 0
             )
-            roe_pct = with_roe / total * 100 if total > 0 else 0.0
-            if roe_pct < 50:
+            pe_pct = with_pe / total * 100 if total > 0 else 0.0
+            if pe_pct < 50:
                 warnings.append(
-                    f"Only {with_roe}/{total} ({roe_pct:.0f}%) symbols have ROE data "
+                    f"Only {with_pe}/{total} ({pe_pct:.0f}%) symbols have P/E data "
                     f"in {latest_fund.name}. Rankings may be unreliable."
                 )
         except (OSError, json.JSONDecodeError, KeyError) as e:
