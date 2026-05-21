@@ -8,12 +8,10 @@ Output:
   data/backtest/backtest_YYYYMMDD_Nmo.csv  — one row per weekly rebalance
 
 LIMITATIONS (read before interpreting results):
-  1. P/E fundamentals are loaded per ISO week where data exists. If a week's
-     file is missing, the latest earlier P/E file is used; weeks before the
-     first P/E file have no ranking-driven trades.
-  2. Survivorship bias: only current Nifty 250 constituents are simulated; stocks
-     delisted or removed from the index are absent from all historical weeks.
-  3. Benchmark is ^CNX250 price index (not TRI); active return appears ~1.5 %/yr
+  1. Survivorship bias (reduced): stocks with fewer than 5 years of price history
+     are excluded, filtering out recent index additions. Stocks delisted or removed
+     before data collection began are still absent; results remain illustrative.
+  2. Benchmark is ^CNX250 price index (not TRI); active return appears ~1.5 %/yr
      better than reality because dividends are excluded from the benchmark.
 """
 
@@ -21,9 +19,9 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import sys
 import time
+import warnings
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
@@ -32,21 +30,21 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
+warnings.filterwarnings("ignore", message=".*Timestamp.utcnow.*")
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pipeline.compute_metrics import compute_rankings
-from portfolio_types import BacktestAnnualTax, BacktestTradeEntry, BacktestWeekResult, FundamentalsEntry
-
-WeeklyFundamentals = dict[str, dict[str, FundamentalsEntry]]
+from portfolio_types import BacktestAnnualTax, BacktestTradeEntry, BacktestWeekResult
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 PRICES_DIR = DATA_DIR / "market" / "prices"
-FUNDAMENTALS_DIR = DATA_DIR / "market" / "fundamentals"
 UNIVERSE_FILE = DATA_DIR / "universe" / "universe.csv"
 DAILY_FILE = PRICES_DIR / "daily_adj_close.csv"
 DAILY_LOW_FILE = PRICES_DIR / "daily_low.csv"
 DAILY_HIGH_FILE = PRICES_DIR / "daily_high.csv"
 BACKTEST_RESULTS_DIR = DATA_DIR / "backtest"
+BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
 
 INITIAL_CAPITAL: float = 25_000.0
 TRANSACTION_COST_PCT: float = 0.001    # 0.1 % per trade side
@@ -55,9 +53,10 @@ TARGET_TOP_N: int = 15                 # buy the top N eligible stocks
 SELL_RANK_THRESHOLD: int = 30          # sell held stock if rank drops below this
 MAX_POSITION_WEIGHT: float = 0.20      # trim / cap at 20 % of NAV
 # Calendar days to load before backtest start for MA + momentum warm-up.
-# Covers 200-day MA and 52-week (≈260 trading-day) momentum lookback.
-MA_WARMUP_DAYS: int = 420
-MAX_MONTHS: int = 60
+# 520 days covers 200-day MA, 52-week momentum lookback, and cross-event detection history.
+MA_WARMUP_DAYS: int = 520
+MAX_MONTHS: int = 120
+MIN_BACKTEST_HISTORY_YEARS: int = 5    # exclude stocks with < 5 yr of price data
 TAX_RATE_PCT: float = 30.0             # flat tax rate on net annual gains (%)
 RISK_FREE_RATE_ANNUAL_PCT: float = 6.5 # India 10-yr G-sec approximation for Sharpe
 YFINANCE_BATCH_SIZE: int = 50
@@ -67,6 +66,11 @@ YFINANCE_BATCH_SLEEP: float = 2.0      # seconds between yfinance batch requests
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
+
+def _strip_tz(idx: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Return a timezone-naive DatetimeIndex regardless of input tz state."""
+    return idx.tz_convert(None) if idx.tz is not None else idx.tz_localize(None)
+
 
 def load_universe() -> list[str]:
     """Return the list of NSE symbols from data/universe/universe.csv."""
@@ -129,7 +133,7 @@ def _fetch_prices_from_yfinance(
             low  = raw[["Low"]].rename(columns={"Low": ticker_name})   if "Low"  in raw.columns else pd.DataFrame()
             high = raw[["High"]].rename(columns={"High": ticker_name}) if "High" in raw.columns else pd.DataFrame()
 
-        ts_index = pd.to_datetime(close.index).tz_localize(None)
+        ts_index = _strip_tz(pd.to_datetime(close.index))
         close.columns = [str(c).replace(".NS", "") for c in close.columns]
         close.index = ts_index
         close_frames.append(close)
@@ -161,7 +165,7 @@ def _load_daily_csv(path: Path) -> pd.DataFrame | None:
         return None
     try:
         df = pd.read_csv(path, index_col=0, parse_dates=True)
-        df.index = pd.to_datetime(df.index).tz_localize(None)
+        df.index = _strip_tz(pd.to_datetime(df.index))
         return df
     except (OSError, pd.errors.ParserError) as exc:
         print(f"  WARNING: Could not read {path.name}: {exc}")
@@ -275,6 +279,26 @@ def load_or_extend_price_history(
     return combined_close, combined_low, combined_high
 
 
+def filter_stocks_by_history(
+    daily_prices: pd.DataFrame,
+    min_years: int,
+) -> list[str]:
+    """Return symbols that have at least min_years of price history.
+
+    Span is measured from the symbol's first non-NaN date to its last non-NaN date
+    in the loaded daily_prices DataFrame.
+    """
+    min_span = timedelta(days=min_years * 365)
+    qualified = []
+    for sym in daily_prices.columns:
+        col = daily_prices[sym].dropna()
+        if col.empty:
+            continue
+        if col.index[-1] - col.index[0] >= min_span:
+            qualified.append(sym)
+    return qualified
+
+
 def iso_week_str(d: date | pd.Timestamp) -> str:
     """Return an ISO year-week string (e.g. '2026-18') for a date-like value."""
     d_date = d.date() if isinstance(d, pd.Timestamp) else d
@@ -282,70 +306,31 @@ def iso_week_str(d: date | pd.Timestamp) -> str:
     return f"{iso.year}-{iso.week:02d}"
 
 
-def load_weekly_fundamentals() -> WeeklyFundamentals:
-    """Load all weekly PE fundamentals files from data/market/fundamentals/.
 
-    Returns a mapping of ISO week string to symbol fundamentals. Rankings use
-    only pe_ratio via compute_rankings(); stale extra fields in older JSON files
-    are ignored by the ranking path.
+
+def _load_benchmark_from_csv(start: date, end: date) -> pd.Series:
+    """Load benchmark prices from data/market/benchmark.csv.
+
+    Returns a timezone-naive, date-indexed Series (price_index column).
+    Returns an empty Series if the file is missing or has no rows in range.
     """
-    files = sorted(FUNDAMENTALS_DIR.glob("[0-9][0-9][0-9][0-9]-[0-9][0-9].json"))
-    weekly: WeeklyFundamentals = {}
-    unreadable = 0
-
-    for f in files:
-        try:
-            with open(f) as fh:
-                data: dict[str, FundamentalsEntry] = json.load(fh)
-            weekly[f.stem] = data
-        except (OSError, json.JSONDecodeError) as exc:
-            unreadable += 1
-            print(f"  WARNING: Skipping unreadable fundamentals file {f.name}: {exc}")
-
-    if not weekly:
-        print(
-            "WARNING: No weekly PE fundamentals files found. "
-            "Rankings cannot be computed, so no ranking-driven trades will occur."
-        )
-        return {}
-
-    weeks_with_pe = sum(
-        1
-        for data in weekly.values()
-        if any(
-            not info.get("error")
-            and info.get("pe_ratio") is not None
-            and info.get("pe_ratio", 0) > 0
-            for info in data.values()
-        )
-    )
-    msg = (
-        f"Loaded {len(weekly)} weekly PE fundamentals files "
-        f"({weeks_with_pe} with positive P/E coverage). "
-        "Missing simulation weeks will use the latest prior file."
-    )
-    if unreadable:
-        msg += f" Skipped {unreadable} unreadable file(s)."
-    print(msg)
-    return weekly
-
-
-def select_fundamentals_for_week(
-    weekly_fundamentals: WeeklyFundamentals,
-    week_ts: date | pd.Timestamp,
-) -> dict[str, FundamentalsEntry] | None:
-    """Return fundamentals for week_ts, falling back to the latest prior week."""
-    if not weekly_fundamentals:
-        return None
-
-    week_key = iso_week_str(week_ts)
-    if week_key in weekly_fundamentals:
-        return weekly_fundamentals[week_key]
-
-    prior_weeks = [key for key in weekly_fundamentals if key <= week_key]
-    if not prior_weeks:
-        return None
-    return weekly_fundamentals[max(prior_weeks)]
+    if not BENCHMARK_FILE.exists():
+        return pd.Series(dtype=float)
+    try:
+        df = pd.read_csv(BENCHMARK_FILE, parse_dates=["date"])
+        df = df.dropna(subset=["price_index"])
+        df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
+        df = df.set_index("date").sort_index()
+        series = df["price_index"].loc[
+            pd.Timestamp(start) : pd.Timestamp(end)
+        ]
+        if series.empty:
+            return pd.Series(dtype=float)
+        print(f"Benchmark (benchmark.csv): {len(series)} trading days loaded.")
+        return series
+    except Exception as exc:
+        print(f"WARNING: Could not read benchmark.csv: {exc}")
+        return pd.Series(dtype=float)
 
 
 def fetch_benchmark_history(start: date, end: date) -> pd.Series:
@@ -371,7 +356,7 @@ def fetch_benchmark_history(start: date, end: date) -> pd.Series:
         else:
             close = raw["Close"] if "Close" in raw.columns else raw.iloc[:, 0]
 
-        close.index = pd.to_datetime(close.index).tz_localize(None)
+        close.index = _strip_tz(pd.to_datetime(close.index))
         print(f"Benchmark (^CNX250): {len(close)} trading days fetched.")
         return close.sort_index()
     except Exception as exc:
@@ -576,7 +561,6 @@ def run_backtest(
     daily_prices: pd.DataFrame,
     daily_low: pd.DataFrame,
     daily_high: pd.DataFrame,
-    weekly_fundamentals: WeeklyFundamentals,
     benchmark_series: pd.Series,
 ) -> tuple[list[BacktestWeekResult], list[BacktestTradeEntry], dict[int, float]]:
     """Simulate the strategy week-by-week.
@@ -595,6 +579,7 @@ def run_backtest(
     today = date.today()
     backtest_start = (pd.Timestamp.today() - pd.DateOffset(months=num_months)).date()
     weekly_dates = pd.date_range(start=backtest_start, end=today, freq="W-FRI")
+    effective_start: date = backtest_start
 
     state: dict[str, Any] = {
         "cash": INITIAL_CAPITAL,
@@ -622,14 +607,9 @@ def run_backtest(
             if pd.notna(val) and float(val) > 0
         }
 
-        week_fundamentals = select_fundamentals_for_week(weekly_fundamentals, week_ts)
-
-        # Cap to last 300 rows: momentum/MA algorithms need at most ~300 trading days.
-        ranking_window = prices_window.iloc[max(0, len(prices_window) - 300):]
-        if week_fundamentals is not None:
-            rankings, _ = compute_rankings(week_fundamentals, ranking_window)
-        else:
-            rankings = pd.DataFrame()
+        # Cap to last 520 rows: supports 200-day MA, 52-week momentum, and cross-event detection.
+        ranking_window = prices_window.iloc[max(0, len(prices_window) - 520):]
+        rankings, _ = compute_rankings(ranking_window)
 
         nav_before = _compute_nav(state, current_prices)
         week_sell_gross: float = 0.0
@@ -763,7 +743,7 @@ def run_backtest(
         active_cumulative: float | None = None
 
         if bm_level is not None:
-            if bm_start_level is None:
+            if bm_start_level is None and week_ts.date() >= effective_start:
                 bm_start_level = bm_level
             if bm_start_level and bm_start_level > 0:
                 bm_cumulative = (bm_level / bm_start_level - 1) * 100
@@ -776,30 +756,32 @@ def run_backtest(
                 if weekly_return_pct is not None:
                     active_weekly = weekly_return_pct - bm_weekly
 
-        results.append(BacktestWeekResult(
-            week_date=week_ts.date().isoformat(),
-            portfolio_nav=round(nav, 2),
-            weekly_return_pct=round(weekly_return_pct, 4) if weekly_return_pct is not None else None,
-            cumulative_return_pct=round(cumulative_return_pct, 4),
-            benchmark_level=round(bm_level, 2) if bm_level is not None else None,
-            benchmark_weekly_return_pct=round(bm_weekly, 4) if bm_weekly is not None else None,
-            benchmark_cumulative_return_pct=round(bm_cumulative, 4) if bm_cumulative is not None else None,
-            active_return_weekly_pct=round(active_weekly, 4) if active_weekly is not None else None,
-            active_return_cumulative_pct=round(active_cumulative, 4) if active_cumulative is not None else None,
-            num_holdings=num_holdings,
-            cash_pct=round(cash_pct, 2),
-            num_buys=num_buys,
-            num_sells=num_sells,
-            turnover_pct=round(turnover_pct, 2),
-            transaction_cost_inr=round(week_cost, 2),
-        ))
-        prev_nav = nav
+        if week_ts.date() >= effective_start:
+            results.append(BacktestWeekResult(
+                week_date=week_ts.date().isoformat(),
+                portfolio_nav=round(nav, 2),
+                weekly_return_pct=round(weekly_return_pct, 4) if weekly_return_pct is not None else None,
+                cumulative_return_pct=round(cumulative_return_pct, 4),
+                benchmark_level=round(bm_level, 2) if bm_level is not None else None,
+                benchmark_weekly_return_pct=round(bm_weekly, 4) if bm_weekly is not None else None,
+                benchmark_cumulative_return_pct=round(bm_cumulative, 4) if bm_cumulative is not None else None,
+                active_return_weekly_pct=round(active_weekly, 4) if active_weekly is not None else None,
+                active_return_cumulative_pct=round(active_cumulative, 4) if active_cumulative is not None else None,
+                num_holdings=num_holdings,
+                cash_pct=round(cash_pct, 2),
+                num_buys=num_buys,
+                num_sells=num_sells,
+                turnover_pct=round(turnover_pct, 2),
+                transaction_cost_inr=round(week_cost, 2),
+            ))
 
-        wk_str = f"{weekly_return_pct:+.2f}%" if weekly_return_pct is not None else "   N/A"
-        print(
-            f"{week_ts.strftime('%Y-%W'):<12} {nav:>12,.0f} "
-            f"{wk_str:>8} {cumulative_return_pct:>+8.2f}% {num_holdings:>6} stocks"
-        )
+            wk_str = f"{weekly_return_pct:+.2f}%" if weekly_return_pct is not None else "   N/A"
+            print(
+                f"{week_ts.strftime('%Y-%W'):<12} {nav:>12,.0f} "
+                f"{wk_str:>8} {cumulative_return_pct:>+8.2f}% {num_holdings:>6} stocks"
+            )
+
+        prev_nav = nav
 
     return results, trades, state["realized_pnl_by_year"]
 
@@ -1192,9 +1174,8 @@ def _print_summary(results: list[BacktestWeekResult]) -> None:
     print(f"  Avg weekly turnover:     {avg_turnover:.1f}%")
     print()
     print(
-        "  NOTE: Results use weekly PE fundamentals where available, with latest-prior\n"
-        "        fallback for missing weeks. Current Nifty 250 universe creates\n"
-        "        survivorship bias, so treat results with caution."
+        "  NOTE: Stocks with <5yr price history excluded to reduce survivorship bias.\n"
+        "        Delisted/removed stocks are still absent; treat results with caution."
     )
 
 
@@ -1220,8 +1201,8 @@ def main() -> None:
         description="Backtest the nifty_agent strategy over a historical period.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "LIMITATIONS: uses weekly PE fundamentals with latest-prior fallback and\n"
-            "the current Nifty 250 universe (survivorship bias). See module docstring."
+            "LIMITATIONS: uses the current Nifty 250 universe (survivorship bias). "
+            "See module docstring."
         ),
     )
     parser.add_argument(
@@ -1249,13 +1230,28 @@ def main() -> None:
     print(f"  Universe:     {len(universe)} symbols")
 
     daily_prices, daily_low, daily_high = load_or_extend_price_history(data_start, universe)
-    weekly_fundamentals = load_weekly_fundamentals()
 
-    print("Fetching benchmark history (^CNX250)…")
-    benchmark_series = fetch_benchmark_history(backtest_start - timedelta(days=7), today)
+    # Reduce survivorship bias: keep only stocks with >= MIN_BACKTEST_HISTORY_YEARS of data.
+    qualified = filter_stocks_by_history(daily_prices, MIN_BACKTEST_HISTORY_YEARS)
+    excluded_count = sum(1 for s in universe if s not in set(qualified))
+    print(
+        f"  History filter ({MIN_BACKTEST_HISTORY_YEARS}yr): "
+        f"{len(qualified)} stocks qualify, {excluded_count} excluded."
+    )
+    daily_prices = daily_prices[[s for s in qualified if s in daily_prices.columns]]
+    if not daily_low.empty:
+        daily_low = daily_low[[s for s in qualified if s in daily_low.columns]]
+    if not daily_high.empty:
+        daily_high = daily_high[[s for s in qualified if s in daily_high.columns]]
+
+    print("Loading benchmark history…")
+    benchmark_series = _load_benchmark_from_csv(backtest_start - timedelta(days=7), today)
+    if benchmark_series.empty:
+        print("  Falling back to yfinance for benchmark…")
+        benchmark_series = fetch_benchmark_history(backtest_start - timedelta(days=7), today)
 
     results, trades, realized_pnl_by_year = run_backtest(
-        num_months, daily_prices, daily_low, daily_high, weekly_fundamentals, benchmark_series
+        num_months, daily_prices, daily_low, daily_high, benchmark_series
     )
 
     if not results:

@@ -7,10 +7,8 @@ Reads:
   data/market/benchmark.csv
   data/market/prices/YYYY-WW.csv          (latest weekly OHLCV snapshot)
   data/market/prices/daily_adj_close.csv  (cumulative daily adj_close for MA calculation)
-  data/market/fundamentals/YYYY-WW.json   (latest available week)
 
 Stocks are excluded from ranking (and cannot be bought) if:
-  - P/E ratio is missing, null, or <= 0
   - Fewer than MIN_HISTORY_DAYS of daily price history are available
 """
 
@@ -28,11 +26,10 @@ from tabulate import tabulate
 
 # Make portfolio_types importable when running as `uv run python scripts/foo.py`
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from portfolio_types import FundamentalsEntry, PerformanceResult, Portfolio
+from portfolio_types import PerformanceResult, Portfolio
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 PRICES_DIR = DATA_DIR / "market" / "prices"
-FUNDAMENTALS_DIR = DATA_DIR / "market" / "fundamentals"
 PORTFOLIO_FILE = DATA_DIR / "portfolio" / "portfolio.json"
 BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
 DAILY_FILE = PRICES_DIR / "daily_adj_close.csv"
@@ -46,9 +43,10 @@ MIN_HISTORY_DAYS = 200         # minimum daily price history required for MA cal
 
 # Factor weights must sum to 1.0.
 WEIGHTS: dict[str, float] = {
-    "lt_momentum": 0.20,   # long-term momentum (12-1 month return)
-    "nt_momentum": 0.20,   # near-term momentum (50-DMA vs 200-DMA)
-    "value": 0.60,         # earnings yield (1/PE) normalised across eligible universe
+    "lt_momentum": 0.15,   # long-term momentum (12-1 month return)
+    "nt_momentum": 0.30,   # near-term momentum (50-DMA vs 200-DMA ratio)
+    "cross_speed": 0.30,   # golden cross speed (1 / days from death cross to golden cross)
+    "cross_peak": 0.25,    # golden cross peak (1 / days from price-200DMA touch to golden cross)
 }
 
 
@@ -82,24 +80,6 @@ def load_portfolio() -> Portfolio:
         sys.exit(1)
 
 
-def load_latest_fundamentals() -> dict[str, FundamentalsEntry]:
-    """Load the most recent fundamentals JSON file.
-
-    Iterates candidate files newest-first. Returns an empty dict if no
-    readable file exists (rankings will be empty this session).
-    """
-    files = sorted(FUNDAMENTALS_DIR.glob("*.json"), reverse=True)
-    for f in files:
-        try:
-            with open(f) as fh:
-                data: dict[str, FundamentalsEntry] = json.load(fh)
-            return data
-        except (OSError, json.JSONDecodeError) as e:
-            print(f"  WARNING: Skipping unreadable fundamentals file {f.name}: {e}")
-            continue
-    return {}
-
-
 def load_latest_weekly_prices() -> pd.DataFrame | None:
     """Load the most recent weekly prices CSV.
 
@@ -117,7 +97,7 @@ def load_latest_weekly_prices() -> pd.DataFrame | None:
     return None
 
 
-def load_daily_prices(lookback_days: int = 300) -> pd.DataFrame | None:
+def load_daily_prices(lookback_days: int = 520) -> pd.DataFrame | None:
     """Load the cumulative daily adj_close CSV filtered to the last *lookback_days* days.
 
     Args:
@@ -223,18 +203,149 @@ def compute_nt_momentum(daily: pd.DataFrame | None) -> pd.Series[Any]:
     return pd.Series(result)
 
 
+_SENTINEL = float("inf")  # marks "no prior cross found" — replaced with 75th pct after normalise
+
+
+def compute_cross_speed(daily: pd.DataFrame | None) -> pd.Series[Any]:
+    """Compute Golden Cross speed for each symbol.
+
+    Score = 1 / calendar_days_between(last Death Cross, most recent Golden Cross).
+    Fewer days = faster moving-average cycle = higher score.
+
+    Special cases:
+      - Currently in Death Cross (50-DMA < 200-DMA): raw = 0.0
+      - Golden Cross found but no prior Death Cross in history: raw = _SENTINEL
+        (replaced with the 75th percentile of the universe after normalisation)
+
+    Returns an empty Series if *daily* is None.
+    """
+    if daily is None or daily.empty:
+        return pd.Series(dtype=float)
+
+    result: dict[str, float] = {}
+    for sym in daily.columns:
+        col = daily[sym].dropna()
+        if len(col) < MIN_HISTORY_DAYS:
+            continue
+        ma50 = col.rolling(MA_SHORT).mean()
+        ma200 = col.rolling(MA_LONG).mean()
+        valid = ma50.notna() & ma200.notna()
+        if not valid.any():
+            continue
+
+        above = (ma50 > ma200).astype(int)
+        above = above[valid]
+
+        if above.iloc[-1] == 0:
+            result[sym] = 0.0
+            continue
+
+        transitions = above.diff()
+        golden_crosses = transitions.index[transitions == 1]
+        if len(golden_crosses) == 0:
+            result[sym] = _SENTINEL
+            continue
+
+        last_golden = golden_crosses[-1]
+        death_crosses_before = transitions.index[
+            (transitions == -1) & (transitions.index < last_golden)
+        ]
+        if len(death_crosses_before) == 0:
+            result[sym] = _SENTINEL
+            continue
+
+        last_death = death_crosses_before[-1]
+        days = (last_golden - last_death).days
+        result[sym] = 1.0 / days if days > 0 else 1.0
+
+    return pd.Series(result)
+
+
+def compute_cross_peak(daily: pd.DataFrame | None) -> pd.Series[Any]:
+    """Compute Golden Cross peak for each symbol.
+
+    Score = 1 / calendar_days_between(last day price <= 200-DMA, most recent Golden Cross).
+    Fewer days = price breakout and MA confirmation were tightly coupled = higher score.
+
+    Special cases:
+      - Currently in Death Cross: raw = 0.0
+      - Golden Cross found but price never touched 200-DMA before it: raw = _SENTINEL
+        (replaced with the 75th percentile of the universe after normalisation)
+
+    Returns an empty Series if *daily* is None.
+    """
+    if daily is None or daily.empty:
+        return pd.Series(dtype=float)
+
+    result: dict[str, float] = {}
+    for sym in daily.columns:
+        col = daily[sym].dropna()
+        if len(col) < MIN_HISTORY_DAYS:
+            continue
+        ma50 = col.rolling(MA_SHORT).mean()
+        ma200 = col.rolling(MA_LONG).mean()
+        valid = ma50.notna() & ma200.notna()
+        if not valid.any():
+            continue
+
+        above = (ma50 > ma200).astype(int)
+        above = above[valid]
+        col_valid = col[valid]
+        ma200_valid = ma200[valid]
+
+        if above.iloc[-1] == 0:
+            result[sym] = 0.0
+            continue
+
+        transitions = above.diff()
+        golden_crosses = transitions.index[transitions == 1]
+        if len(golden_crosses) == 0:
+            result[sym] = _SENTINEL
+            continue
+
+        last_golden = golden_crosses[-1]
+
+        # Find the most recent day BEFORE the Golden Cross when price <= 200-DMA.
+        before_cross = col_valid.index < last_golden
+        price_before = col_valid[before_cross]
+        ma200_before = ma200_valid[before_cross]
+        touched = price_before.index[price_before <= ma200_before]
+
+        if len(touched) == 0:
+            result[sym] = _SENTINEL
+            continue
+
+        last_touch = touched[-1]
+        days = (last_golden - last_touch).days
+        result[sym] = 1.0 / days if days > 0 else 1.0
+
+    return pd.Series(result)
+
+
+def _apply_sentinel_substitution(
+    raw: pd.Series[Any], normalised: pd.Series[Any]
+) -> pd.Series[Any]:
+    """Replace _SENTINEL entries in *normalised* with the 75th percentile of non-sentinel values."""
+    sentinel_mask = raw == _SENTINEL
+    if not sentinel_mask.any():
+        return normalised
+    non_sentinel_norm = normalised[~sentinel_mask]
+    p75 = float(non_sentinel_norm.quantile(0.75)) if not non_sentinel_norm.empty else 0.75
+    result = normalised.copy()
+    result[sentinel_mask] = p75
+    return result
+
+
 def compute_rankings(
-    fundamentals: dict[str, FundamentalsEntry],
     daily: pd.DataFrame | None,
 ) -> tuple[pd.DataFrame, list[tuple[str, str]]]:
     """Compute composite factor rankings for all eligible symbols.
 
-    Symbols are excluded from ranking (and cannot be bought) if P/E is
-    missing or <= 0, or if there is insufficient price history for MA calculation.
+    Symbols are excluded from ranking (and cannot be bought) if there is
+    insufficient price history for MA calculation (< MIN_HISTORY_DAYS days).
 
     Args:
-        fundamentals: Mapping of symbol → FundamentalsEntry.
-        daily:        Wide-format daily adj_close DataFrame (columns=symbols).
+        daily: Wide-format daily adj_close DataFrame (columns=symbols).
 
     Returns:
         A tuple of:
@@ -244,47 +355,57 @@ def compute_rankings(
     """
     lt_mom = compute_lt_momentum(daily)
     nt_mom = compute_nt_momentum(daily)
+    cross_speed = compute_cross_speed(daily)
+    cross_peak = compute_cross_peak(daily)
 
-    rows: list[dict[str, Any]] = []
+    eligible = lt_mom.index.intersection(nt_mom.index).intersection(
+        cross_speed.index
+    ).intersection(cross_peak.index)
+
     excluded: list[tuple[str, str]] = []
+    if daily is not None:
+        for sym in daily.columns:
+            if sym not in eligible:
+                excluded.append((sym, "insufficient_price_history"))
 
-    for sym, info in fundamentals.items():
-        if info.get("error"):
-            excluded.append((sym, "no_data"))
-            continue
-        pe = info.get("pe_ratio")
-        if pe is None or pe <= 0:
-            excluded.append((sym, "missing_pe"))
-            continue
-        if sym not in lt_mom.index or sym not in nt_mom.index:
-            excluded.append((sym, "insufficient_price_history"))
-            continue
-        rows.append({
-            "symbol": sym,
-            "earnings_yield": 1.0 / pe,
-            "lt_momentum_raw": lt_mom[sym],
-            "nt_momentum_raw": nt_mom[sym],
-            "sector": info.get("sector", "Unknown"),
-        })
-
-    if not rows:
+    if len(eligible) == 0:
         return pd.DataFrame(), excluded
 
-    df = pd.DataFrame(rows).set_index("symbol")
+    df = pd.DataFrame({
+        "lt_momentum_raw": lt_mom[eligible],
+        "nt_momentum_raw": nt_mom[eligible],
+        "cross_speed_raw": cross_speed[eligible],
+        "cross_peak_raw": cross_peak[eligible],
+    })
+    df.index.name = "symbol"
 
-    # Normalise each factor to [0, 1] across the eligible universe.
     df["lt_momentum"] = normalise_series(df["lt_momentum_raw"])
     df["nt_momentum"] = normalise_series(df["nt_momentum_raw"])
-    df["value"] = normalise_series(df["earnings_yield"])
+
+    def _normalise_with_sentinel(raw_col: pd.Series[Any]) -> pd.Series[Any]:
+        """Normalise a column that may contain _SENTINEL values.
+
+        Sentinel entries are temporarily excluded from normalisation, then
+        replaced with the 75th percentile of the normalised non-sentinel values.
+        """
+        sentinel_mask = raw_col == _SENTINEL
+        non_sentinel = raw_col[~sentinel_mask]
+        norm = normalise_series(non_sentinel)
+        # Extend to full index with 0.0 for sentinels, then apply substitution.
+        full_norm = norm.reindex(raw_col.index, fill_value=0.0)
+        return _apply_sentinel_substitution(raw_col, full_norm)
+
+    df["cross_speed"] = _normalise_with_sentinel(df["cross_speed_raw"])
+    df["cross_peak"] = _normalise_with_sentinel(df["cross_peak_raw"])
 
     df["composite"] = (
         df["lt_momentum"] * WEIGHTS["lt_momentum"]
         + df["nt_momentum"] * WEIGHTS["nt_momentum"]
-        + df["value"] * WEIGHTS["value"]
+        + df["cross_speed"] * WEIGHTS["cross_speed"]
+        + df["cross_peak"] * WEIGHTS["cross_peak"]
     )
     df = df.sort_values("composite", ascending=False)
     df["rank"] = range(1, len(df) + 1)
-    # MA signal label for display: ABOVE means 50-DMA > 200-DMA (bullish).
     df["ma_signal"] = df["nt_momentum_raw"].apply(
         lambda x: "ABOVE" if x > 0 else "BELOW"
     )
@@ -464,9 +585,8 @@ def fmt(val: float | None, suffix: str = "", decimals: int = 2) -> str:
 def main() -> None:
     """Load all data files, compute rankings and performance, print the report, and write performance.csv."""
     portfolio = load_portfolio()
-    fundamentals = load_latest_fundamentals()
     weekly_prices = load_latest_weekly_prices()
-    daily_prices = load_daily_prices(lookback_days=400)
+    daily_prices = load_daily_prices()
     benchmark_df = load_benchmark()
 
     # Compute and persist performance metrics before the rebalance snapshot.
@@ -518,8 +638,8 @@ def main() -> None:
     # -------------------------------------------------------------------------
     # Stock rankings
     # -------------------------------------------------------------------------
-    if fundamentals and daily_prices is not None:
-        rankings, excluded = compute_rankings(fundamentals, daily_prices)
+    if daily_prices is not None:
+        rankings, excluded = compute_rankings(daily_prices)
     else:
         rankings = pd.DataFrame()
         excluded = []
@@ -531,7 +651,12 @@ def main() -> None:
         def _status(sym: str) -> str:
             if sym in held_symbols:
                 rank = int(rankings.loc[sym, "rank"])  # type: ignore[arg-type]
-                return "SELL_CANDIDATE" if rank > 30 else "HELD"
+                if rank > 30:
+                    return "SELL_CANDIDATE"
+                # Death Cross is an explicit sell trigger.
+                if str(rankings.loc[sym, "ma_signal"]) == "BELOW":
+                    return "SELL_CANDIDATE"
+                return "HELD"
             rank = int(rankings.loc[sym, "rank"])  # type: ignore[arg-type]
             return "BUY_CANDIDATE" if rank <= 15 else ""
 
@@ -544,7 +669,8 @@ def main() -> None:
                 sym,
                 f"{row['lt_momentum']:.3f}",
                 f"{row['nt_momentum']:.3f}",
-                f"{row['value']:.3f}",
+                f"{row['cross_speed']:.3f}",
+                f"{row['cross_peak']:.3f}",
                 f"{row['composite']:.3f}",
                 row["ma_signal"],
                 row["status"],
@@ -552,26 +678,22 @@ def main() -> None:
             for sym, row in top_display.iterrows()
         ]
 
-        print("=" * 70)
+        print("=" * 80)
         print(f"STOCK RANKINGS (top 30 of {len(rankings)} eligible)")
-        print("=" * 70)
+        print("=" * 80)
         print(tabulate(
             table_data,
-            headers=["Rank", "Symbol", "LT Mom", "NT Mom", "Value",
+            headers=["Rank", "Symbol", "LT Mom", "NT Mom", "GC Speed", "GC Peak",
                      "Composite", "MA", "Status"],
             tablefmt="simple",
         ))
         print()
 
         if excluded:
-            print(f"EXCLUDED THIS WEEK ({len(excluded)} stocks):")
-            by_reason: dict[str, list[str]] = {}
-            for sym, reason in excluded:
-                by_reason.setdefault(reason, []).append(sym)
-            for reason, syms in sorted(by_reason.items()):
-                truncated = sorted(syms)[:10]
-                suffix = "..." if len(syms) > 10 else ""
-                print(f"  {reason}: {', '.join(truncated)}{suffix}")
+            print(f"EXCLUDED THIS WEEK ({len(excluded)} stocks, insufficient price history):")
+            truncated = sorted(sym for sym, _ in excluded)[:10]
+            suffix = "..." if len(excluded) > 10 else ""
+            print(f"  {', '.join(truncated)}{suffix}")
             print()
 
     # -------------------------------------------------------------------------

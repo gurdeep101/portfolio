@@ -1,0 +1,5 @@
+week_date,portfolio_nav,weekly_return_pct,cumulative_return_pct,benchmark_level,benchmark_weekly_return_pct,benchmark_cumulative_return_pct,active_return_weekly_pct,active_return_cumulative_pct,num_holdings,cash_pct,num_buys,num_sells,turnover_pct,transaction_cost_inr
+2026-04-24,25000.0,,0.0,,,,,,0,100.0,0,0,0.0,0.0
+2026-05-01,25000.0,0.0,0.0,,,,,,0,100.0,0,0,0.0,0.0
+2026-05-08,25000.0,0.0,0.0,,,,,,0,100.0,0,0,0.0,0.0
+2026-05-15,25000.0,0.0,0.0,,,,,,0,100.0,0,0,0.0,0.0

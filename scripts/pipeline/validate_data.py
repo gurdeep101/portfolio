@@ -14,6 +14,7 @@ Non-blocking warnings (printed, session continues with caution):
   - Any held stock no longer in the universe (possible delisting/removal)
   - Any stock with a >LARGE_MOVE_THRESHOLD single-week price move
     (possible corporate action — do NOT trade that stock)
+  - Fewer than MIN_HISTORY_DAYS daily price rows available for any held stock
 """
 
 from __future__ import annotations
@@ -31,7 +32,6 @@ from portfolio_types import Portfolio
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 PRICES_DIR = DATA_DIR / "market" / "prices"
-FUNDAMENTALS_DIR = DATA_DIR / "market" / "fundamentals"
 UNIVERSE_FILE = DATA_DIR / "universe" / "universe.csv"
 PORTFOLIO_FILE = DATA_DIR / "portfolio" / "portfolio.json"
 BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
@@ -197,35 +197,7 @@ def main() -> None:
                 )
 
     # -------------------------------------------------------------------------
-    # 5. Fundamentals / P/E data availability  (warning only)
-    # -------------------------------------------------------------------------
-    fundamentals_files = sorted(FUNDAMENTALS_DIR.glob("*.json"), reverse=True)
-    if not fundamentals_files:
-        warnings.append(
-            "No fundamentals file found in data/market/fundamentals/. "
-            "Run fetch_fundamentals.py — rankings cannot be computed without P/E data."
-        )
-    else:
-        latest_fund = fundamentals_files[0]
-        try:
-            with open(latest_fund) as fh:
-                fund_data = json.load(fh)
-            total = len(fund_data)
-            with_pe = sum(
-                1 for v in fund_data.values()
-                if not v.get("error") and v.get("pe_ratio") is not None and v.get("pe_ratio", 0) > 0
-            )
-            pe_pct = with_pe / total * 100 if total > 0 else 0.0
-            if pe_pct < 50:
-                warnings.append(
-                    f"Only {with_pe}/{total} ({pe_pct:.0f}%) symbols have P/E data "
-                    f"in {latest_fund.name}. Rankings may be unreliable."
-                )
-        except (OSError, json.JSONDecodeError, KeyError) as e:
-            warnings.append(f"Could not read fundamentals file {latest_fund.name}: {e}")
-
-    # -------------------------------------------------------------------------
-    # 6. Large price move detection  (warning; do NOT trade flagged stocks)
+    # 5. Large price move detection  (warning; do NOT trade flagged stocks)
     # -------------------------------------------------------------------------
     if prices_file is not None and prices_file.exists() and held_symbols:
         try:

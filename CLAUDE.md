@@ -26,6 +26,7 @@ Read `data/portfolio/portfolio.json`. Report:
 uv run python scripts/fetch/fetch_universe.py
 ```
 The script skips automatically if `data/universe/universe.csv` is less than 90 days old.
+Add `--force` to override the age check and re-download unconditionally.
 If it runs and the symbol count changes by more than 5, flag this prominently in the session log.
 
 **Step 3 — Fetch prices**
@@ -34,21 +35,18 @@ uv run python scripts/fetch/fetch_nsepy_price.py
 ```
 This writes the weekly OHLCV snapshot and updates the daily adj_close history.
 On first run, it pulls 52 weeks of history — expect 5–10 minutes.
+Add `--force` to re-fetch the full target window and refresh overlapping rows from origin (useful after a data corruption or missed session).
 If exit code is non-zero, STOP and report the error. Do not proceed.
 
 **Step 4 — Fetch benchmark**
 ```
 uv run python scripts/fetch/fetch_benchmark.py
 ```
+Add `--force` to re-fetch and overwrite all dates (default: fills missing dates only).
 If it fails, note it in the session log and skip benchmark comparison this session. Continue.
 
-**Step 5 — Fetch fundamentals (conditional)**
-```
-uv run python scripts/fetch/fetch_fundamentals.py
-```
-The script writes missing weekly PE files for every weekly prices CSV. It exits 0 if all
-weeks already have fundamentals. If it fails entirely, use the most recent prior
-`data/market/fundamentals/YYYY-WW.json` file and log a warning.
+**Step 5 — Fetch fundamentals (SKIP — no longer needed)**
+The strategy is pure momentum; P/E data is not used in rankings. Skip this step each session.
 
 **Step 6 — Validate data (gate)**
 ```
@@ -67,12 +65,12 @@ Read the full output. This script also writes a row to `data/portfolio/performan
 Pay attention to:
 - Performance summary (weekly return, inception return, CAGR vs benchmark)
 - The full ranking table and which stocks are BUY_CANDIDATE / SELL_CANDIDATE / HELD
-- Excluded stocks (missing P/E or insufficient history) — note the count
+- Excluded stocks (insufficient price history) — note the count
 
 **Step 8 — Reason and decide**
 Apply the Investment Strategy below. Think through:
 1. Which stocks in the top 15 eligible stocks are not currently held? → BUY candidates
-2. Which held stocks have dropped below rank 30? → SELL candidates
+2. Which held stocks have dropped below rank 30, or are in Death Cross (MA=BELOW)? → SELL candidates
 3. Which held stocks exceed 20% weight? → TRIM
 4. Does the rebalance make sense? Is any trade driven by a data anomaly?
 5. Do not trade any stock flagged with a large price move in Step 6.
@@ -144,17 +142,23 @@ Rank all eligible Nifty 250 stocks by composite score each week. Total weight = 
 
 | Factor | Weight | Formula |
 |---|---|---|
-| Long-term momentum | 20% | (52-week return) − (4-week return), normalised |
-| Near-term momentum | 20% | (50-DMA − 200-DMA) / 200-DMA, normalised |
-| Value (earnings yield) | 60% | 1/PE normalised across eligible universe |
+| Long-term momentum | 15% | (52-week return) − (4-week return), normalised |
+| Near-term momentum | 30% | (50-DMA − 200-DMA) / 200-DMA, normalised |
+| Golden Cross speed | 30% | 1 / days(last Death Cross → most recent Golden Cross), normalised |
+| Golden Cross peak | 25% | 1 / days(last price-200-DMA touch → most recent Golden Cross), normalised |
+
+**Golden Cross speed**: measures how quickly the 50-DMA cycled from bearish (below 200-DMA) to bullish (above 200-DMA). Fewer days = faster recovery = higher score. Stocks currently in Death Cross score 0. Stocks that have always been above (no prior Death Cross in history) receive the 75th-percentile score.
+
+**Golden Cross peak**: measures how tightly coupled the price breakout above the 200-DMA was with the 50-DMA confirmation. Fewer days = more decisive momentum = higher score. Same edge-case handling as speed.
 
 **Eligibility**: a stock is excluded from ranking (and cannot be bought) if:
-- P/E ratio is missing or <= 0
 - Fewer than 200 days of price history available
 
 **Target portfolio**: top 15 eligible stocks by composite score, weighted by score, capped at 20%.
 
-**Sell rule**: sell any held stock that drops below rank 30 in the eligible ranking.
+**Sell rule**: sell any held stock that either:
+- drops below rank 30 in the eligible ranking, OR
+- is in a Death Cross (50-DMA < 200-DMA) — explicit momentum exit trigger
 
 **Buy rule**: buy any stock in the top 15 not currently held.
 
@@ -186,10 +190,10 @@ fully to cash is acceptable if no eligible stock meets the criteria.
   but no corresponding `YYYY-WW.csv` snapshot, and auto-writes the missing snapshots.
 
 ### scripts/fetch/fetch_benchmark.py
-- **Writes**: appends to `data/market/benchmark.csv` (date, price_index, tri_level, source)
-- **Args**: none
-- **Exit 0**: success. Exit 1: all sources failed.
-- **Primary source**: NSE live JSON endpoint for TRI; falls back to NSE price index via nselib, then yfinance `^CNX250`.
+- **Writes**: `data/market/benchmark.csv` (date, price_index, tri_level, source)
+- **Args**: `--force` — re-fetch and overwrite all dates (default: fill missing dates only)
+- **Exit 0**: success or already up to date. Exit 1: yfinance fetch failed entirely.
+- **Behaviour**: reads all trading dates from `data/market/prices/daily_adj_close.csv`, compares with existing benchmark rows, and fetches missing dates from yfinance `^CNX250`. Source is always `price_index_yfinance`.
 
 ### scripts/fetch/fetch_fundamentals.py
 - **Writes**: `data/market/fundamentals/YYYY-WW.json` for each week in `data/market/prices/` that lacks a fundamentals file
@@ -227,7 +231,7 @@ fully to cash is acceptable if no eligible stock meets the criteria.
   - `data/backtest/backtest_YYYYMMDD_Nmo_trades.csv` — per-trade execution log
   - `data/backtest/backtest_YYYYMMDD_Nmo_monthly.csv` — monthly return matrix
   - `data/backtest/backtest_YYYYMMDD_Nmo_tax.csv` — annual realized-gain tax table
-- **Limitations**: uses the current Nifty 250 universe (survivorship bias). Results are illustrative, not authoritative.
+- **Limitations**: uses the current Nifty 250 universe; stocks with <5yr price history are excluded to reduce (not eliminate) survivorship bias. Results are illustrative, not authoritative.
 - **When to use**: ad-hoc, outside the weekly session protocol.
 
 ---

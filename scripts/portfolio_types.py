@@ -84,24 +84,6 @@ class DecisionsFile(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# data/market/fundamentals/YYYY-WW.json  (per-symbol entries)
-# ---------------------------------------------------------------------------
-
-class FundamentalsEntry(TypedDict, total=False):
-    """Fundamental data for one symbol, sourced from NSE archives via nselib.
-
-    All fields are optional — NSE archive data may be absent for some dates
-    (weekends, holidays, or symbols not listed at that time).
-    """
-
-    pe_ratio: float | None
-    sector: str
-    fetch_date: str   # ISO date of the trading date used for this entry
-    source: str       # "nselib"
-    error: str        # set to "no_data" if fetch returned nothing
-
-
-# ---------------------------------------------------------------------------
 # return type of compute_metrics.compute_performance()
 # ---------------------------------------------------------------------------
 

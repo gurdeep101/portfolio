@@ -146,6 +146,7 @@ def update_daily_file(df: pd.DataFrame, force: bool = False) -> None:
     """
     adj = df[["symbol", "date", "adj_close"]].copy()
     adj["date"] = pd.to_datetime(adj["date"]).dt.date
+    adj = adj[adj["date"].apply(lambda d: d.weekday() < 5)]  # drop Sat/Sun
     pivot = adj.pivot_table(index="date", columns="symbol", values="adj_close")
     pivot.index = pd.to_datetime(pivot.index)
     pivot = pivot.sort_index()
@@ -233,6 +234,9 @@ def write_historical_snapshots(df: pd.DataFrame) -> None:
     already no-ops if the target file exists.
     """
     tmp = df.copy()
+    tmp["_date"] = pd.to_datetime(tmp["date"])
+    tmp = tmp[tmp["_date"].dt.dayofweek < 5]  # drop Sat/Sun
+    tmp = tmp.drop(columns="_date")
     tmp["_week"] = pd.to_datetime(tmp["date"]).apply(lambda d: iso_week_str(d.date()))
     for week_str, week_df in tmp.groupby("_week"):
         write_weekly_snapshot(week_df.drop(columns="_week"), str(week_str))

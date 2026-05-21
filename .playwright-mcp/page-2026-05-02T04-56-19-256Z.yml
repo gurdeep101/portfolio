@@ -1,0 +1,639 @@
+- generic [active] [ref=e1]:
+  - list [ref=e6]:
+    - listitem [ref=e7]:
+      - link "Option Chain" [ref=e8] [cursor=pointer]:
+        - /url: /option-chain
+    - listitem [ref=e9]:
+      - link "Market Turnover" [ref=e10] [cursor=pointer]:
+        - /url: "#modal_market_turnover_popup"
+    - listitem [ref=e11]:
+      - link "Listings" [ref=e12] [cursor=pointer]:
+        - /url: /market-data/new-stock-exchange-listings-today
+    - listitem [ref=e13]:
+      - link "IPO" [ref=e14] [cursor=pointer]:
+        - /url: /market-data/all-upcoming-issues-ipo
+    - listitem [ref=e15]:
+      - link "Circulars" [ref=e16] [cursor=pointer]:
+        - /url: /resources/exchange-communication-circulars
+    - listitem [ref=e17]:
+      - link "Daily Report" [ref=e18] [cursor=pointer]:
+        - /url: /all-reports
+    - listitem [ref=e19]:
+      - link "Holidays" [ref=e20] [cursor=pointer]:
+        - /url: /resources/exchange-communication-holidays
+    - listitem [ref=e21]:
+      - link "Corporates" [ref=e22] [cursor=pointer]:
+        - /url: /companies-listing/corporate-filings-application
+    - listitem [ref=e23]:
+      - link "Press Releases" [ref=e24] [cursor=pointer]:
+        - /url: /resources/exchange-communication-press-releases
+    - listitem [ref=e25]:
+      - link "Contact Us" [ref=e26] [cursor=pointer]:
+        - /url: /contact/contact-us
+    - listitem [ref=e27]:
+      - generic [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: English
+        - img [ref=e30]
+    - listitem [ref=e31]:
+      - button [ref=e32] [cursor=pointer]:
+        - img [ref=e33]: 
+    - listitem [ref=e34]:
+      - button [ref=e35] [cursor=pointer]:
+        - img [ref=e36]: 
+  - banner [ref=e37]:
+    - navigation [ref=e38]:
+      - generic [ref=e39]:
+        - link "NSE India" [ref=e40] [cursor=pointer]:
+          - /url: /
+          - img "NSE India" [ref=e41]
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - combobox "Sear" [ref=e46]
+              - status [ref=e47]
+            - text: 
+            - button "Click to Search" [ref=e48] [cursor=pointer]:
+              - img "Get Quote Search" [ref=e49]
+          - generic [ref=e50]:
+            - list
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - figure [ref=e55]:
+              - link "NSE - NIFTY 50" [ref=e56] [cursor=pointer]:
+                - /url: /index-tracker/NIFTY%2050
+                - img "NSE - NIFTY 50" [ref=e57]
+            - generic [ref=e59]:
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - generic [ref=e62]: 23,997.55
+                  - generic [ref=e63]: 
+                - generic [ref=e64]: "-180.10 (-0.74%)"
+              - paragraph [ref=e66]: 30-Apr-2026 15:30
+              - generic [ref=e67]:
+                - text: Streaming
+                - img "Streaming" [ref=e68]
+          - text: 
+          - generic "Market Ticker Carousel" [ref=e69]:
+            - generic [ref=e71]:
+              - generic [ref=e73]:
+                - figure [ref=e74]:
+                  - link [ref=e75] [cursor=pointer]:
+                    - /url: "#"
+                    - text: Market Capitalization
+                - paragraph [ref=e76]:
+                  - generic [ref=e77]: 
+                  - text: Lac Crs 463.47 | Tn $ 4.87
+                - paragraph [ref=e78]: 30-Apr-2026
+              - tabpanel [ref=e79]:
+                - generic [ref=e80]:
+                  - figure [ref=e81]:
+                    - link "USDINR" [ref=e82] [cursor=pointer]:
+                      - /url: /currency-getquote?symbol=USDINR#inr-contracts
+                    - text: Futures
+                  - paragraph [ref=e83]:
+                    - text: 26-May-2026 |
+                    - generic [ref=e84]: 
+                    - text: "95.1100"
+                  - paragraph [ref=e85]: 30-Apr-2026 17:00
+              - tabpanel [ref=e86]:
+                - generic [ref=e87]:
+                  - figure [ref=e88]:
+                    - link [ref=e89] [cursor=pointer]:
+                      - /url: "#"
+                      - text: Market Capitalization
+                  - paragraph [ref=e90]:
+                    - generic [ref=e91]: 
+                    - text: Lac Crs 463.47 | Tn $ 4.87
+                  - paragraph [ref=e92]: 30-Apr-2026
+              - generic [ref=e94]:
+                - figure [ref=e95]:
+                  - link [ref=e96] [cursor=pointer]:
+                    - /url: /currency-getquote?symbol=USDINR#inr-contracts
+                    - text: USDINR
+                  - text: Futures
+                - paragraph [ref=e97]:
+                  - text: 26-May-2026 |
+                  - generic [ref=e98]: 
+                  - text: "95.1100"
+                - paragraph [ref=e99]: 30-Apr-2026 17:00
+              - generic [ref=e101]:
+                - figure [ref=e102]:
+                  - link [ref=e103] [cursor=pointer]:
+                    - /url: "#"
+                    - text: Market Capitalization
+                - paragraph [ref=e104]:
+                  - generic [ref=e105]: 
+                  - text: Lac Crs 463.47 | Tn $ 4.87
+                - paragraph [ref=e106]: 30-Apr-2026
+            - tablist [ref=e107]:
+              - tab "Slide 1" [selected] [ref=e108] [cursor=pointer]: "01"
+              - tab "Slide 2" [ref=e109] [cursor=pointer]: "02"
+          - button "playpause" [ref=e110] [cursor=pointer]:
+            - generic [ref=e111]: 
+      - navigation [ref=e114]:
+        - list [ref=e115]:
+          - listitem [ref=e116]:
+            - link "Home" [ref=e117] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e118]:
+            - link "About" [ref=e119] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e120]:
+            - link "Market Data" [ref=e121] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e122]:
+            - link "Invest" [ref=e123] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e124]:
+            - link "List" [ref=e125] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e126]:
+            - link "Trade" [ref=e127] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e128]:
+            - link "Regulation" [ref=e129] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e130]:
+            - link "Learn" [ref=e131] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e132]:
+            - link "Resources" [ref=e133] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e134]:
+            - link "Complaints" [ref=e135] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=e136]:
+            - link "RESEARCH" [ref=e137] [cursor=pointer]:
+              - /url: javascript:;
+  - generic:       
+  - generic [ref=e138]:
+    - generic [ref=e140]:
+      - text:    
+      - heading "Market Watch - Equity/Stock" [level=1] [ref=e141]
+    - tabpanel [ref=e148]:
+      - navigation [ref=e149]:
+        - tablist [ref=e151]:
+          - tab "Equity/Stock" [ref=e152] [cursor=pointer]
+          - link "T0 settlement" [ref=e153] [cursor=pointer]:
+            - /url: /market-data/live-t0-market
+          - link "SME Market" [ref=e154] [cursor=pointer]:
+            - /url: /market-data/sme-market
+          - link "Sovereign Gold Bonds (SGB)" [ref=e155] [cursor=pointer]:
+            - /url: /market-data/sovereign-gold-bond
+          - link "Exchange Traded Funds" [ref=e156] [cursor=pointer]:
+            - /url: /market-data/exchange-traded-funds-etf
+          - link "Block Deals" [ref=e157] [cursor=pointer]:
+            - /url: /market-data/block-deal-watch
+      - tabpanel [ref=e160]:
+        - generic [ref=e161]:
+          - combobox "Category 1" [ref=e164] [cursor=pointer]:
+            - option "NIFTY 50" [selected]
+            - option "NIFTY BANK"
+            - option "NIFTY FINANCIAL SERVICES"
+            - option "NIFTY MIDCAP SELECT"
+            - option "NIFTY NEXT 50"
+            - option "NIFTY 100"
+            - option "NIFTY 200"
+            - option "NIFTY 500"
+            - option "NIFTY INDIA FPI 150"
+            - option "NIFTY LARGEMIDCAP 250"
+            - option "NIFTY MICROCAP 250"
+            - option "NIFTY MIDCAP 100"
+            - option "NIFTY MIDCAP 150"
+            - option "NIFTY MIDCAP 50"
+            - option "NIFTY MIDSMALLCAP 400"
+            - option "NIFTY SMALLCAP 100"
+            - option "NIFTY SMALLCAP 250"
+            - option "NIFTY SMALLCAP 50"
+            - option "NIFTY TOTAL MARKET"
+            - option "NIFTY500 LARGEMIDSMALL EQUAL-CAP WEIGHTED"
+            - option "NIFTY500 MULTICAP 50:25:25"
+            - option "NIFTY AUTO"
+            - option "NIFTY CHEMICALS"
+            - option "NIFTY CONSUMER DURABLES"
+            - option "NIFTY FINANCIAL SERVICES EX-BANK"
+            - option "NIFTY FINANCIAL SERVICES 25/50"
+            - option "NIFTY FMCG"
+            - option "NIFTY HEALTHCARE INDEX"
+            - option "NIFTY IT"
+            - option "NIFTY MEDIA"
+            - option "NIFTY METAL"
+            - option "NIFTY MIDSMALL HEALTHCARE"
+            - option "NIFTY MIDSMALL FINANCIAL SERVICES"
+            - option "NIFTY MIDSMALL IT & TELECOM"
+            - option "NIFTY OIL & GAS"
+            - option "NIFTY PHARMA"
+            - option "NIFTY PSU BANK"
+            - option "NIFTY PRIVATE BANK"
+            - option "NIFTY REALTY"
+            - option "NIFTY500 HEALTHCARE"
+            - option "NIFTY CAPITAL MARKETS"
+            - option "NIFTY COMMODITIES"
+            - option "NIFTY INDIA CONSUMPTION"
+            - option "NIFTY CORE HOUSING"
+            - option "NIFTY INDIA SELECT 5 CORPORATE GROUPS (MAATR)"
+            - option "NIFTY CPSE"
+            - option "NIFTY ENERGY"
+            - option "NIFTY EV & NEW AGE AUTOMOTIVE"
+            - option "NIFTY HOUSING"
+            - option "NIFTY INDIA DEFENCE"
+            - option "NIFTY INDIA DIGITAL"
+            - option "NIFTY INDIA TOURISM"
+            - option "NIFTY INDIA MANUFACTURING"
+            - option "NIFTY INFRASTRUCTURE"
+            - option "NIFTY INDIA INFRASTRUCTURE & LOGISTICS"
+            - option "NIFTY INDIA INTERNET"
+            - option "NIFTY IPO"
+            - option "NIFTY MIDCAP LIQUID 15"
+            - option "NIFTY MNC"
+            - option "NIFTY MOBILITY"
+            - option "NIFTY MIDSMALL INDIA CONSUMPTION"
+            - option "NIFTY500 MULTICAP INFRASTRUCTURE 50:30:20"
+            - option "NIFTY500 MULTICAP INDIA MANUFACTURING 50:30:20"
+            - option "NIFTY INDIA NEW AGE CONSUMPTION"
+            - option "NIFTY NON-CYCLICAL CONSUMER"
+            - option "NIFTY PSE"
+            - option "NIFTY INDIA RAILWAYS PSU"
+            - option "NIFTY RURAL"
+            - option "NIFTY SERVICES SECTOR"
+            - option "NIFTY SHARIAH 25"
+            - option "NIFTY SME EMERGE"
+            - option "NIFTY INDIA CORPORATE GROUP INDEX - TATA GROUP 25% CAP"
+            - option "NIFTY TRANSPORTATION & LOGISTICS"
+            - option "NIFTY WAVES"
+            - option "NIFTY100 ENHANCED ESG"
+            - option "NIFTY100 ESG"
+            - option "NIFTY100 LIQUID 15"
+            - option "NIFTY50 SHARIAH"
+            - option "NIFTY500 SHARIAH"
+            - option "NIFTY CONGLOMERATE 50"
+            - option "NIFTY ALPHA 50"
+            - option "NIFTY ALPHA LOW-VOLATILITY 30"
+            - option "NIFTY ALPHA QUALITY LOW-VOLATILITY 30"
+            - option "NIFTY ALPHA QUALITY VALUE LOW-VOLATILITY 30"
+            - option "NIFTY DIVIDEND OPPORTUNITIES 50"
+            - option "NIFTY GROWTH SECTORS 15"
+            - option "NIFTY HIGH BETA 50"
+            - option "NIFTY LOW VOLATILITY 50"
+            - option "NIFTY MIDCAP150 QUALITY 50"
+            - option "NIFTY500 MULTICAP MOMENTUM QUALITY 50"
+            - option "NIFTY QUALITY LOW-VOLATILITY 30"
+            - option "NIFTY SMALLCAP250 QUALITY 50"
+            - option "NIFTY TOTAL MARKET MOMENTUM QUALITY 50"
+            - option "NIFTY TOP 10 EQUAL WEIGHT"
+            - option "NIFTY TOP 15 EQUAL WEIGHT"
+            - option "NIFTY TOP 20 EQUAL WEIGHT"
+            - option "NIFTY100 ALPHA 30"
+            - option "NIFTY100 EQUAL WEIGHT"
+            - option "NIFTY100 LOW VOLATILITY 30"
+            - option "NIFTY100 QUALITY 30"
+            - option "NIFTY200 ALPHA 30"
+            - option "NIFTY200 QUALITY 30"
+            - option "NIFTY200 VALUE 30"
+            - option "NIFTY200 MOMENTUM 30"
+            - option "NIFTY50 EQUAL WEIGHT"
+            - option "NIFTY50 VALUE 20"
+            - option "NIFTY500 EQUAL WEIGHT"
+            - option "NIFTY500 FLEXICAP QUALITY 30"
+            - option "NIFTY500 LOW VOLATILITY 50"
+            - option "NIFTY500 MULTIFACTOR MQVLV 50"
+            - option "NIFTY500 QUALITY 50"
+            - option "NIFTY500 VALUE 50"
+            - option "NIFTY500 MOMENTUM 50"
+            - option "NIFTY MIDCAP150 MOMENTUM 50"
+            - option "NIFTY MIDSMALLCAP400 MOMENTUM QUALITY 100"
+            - option "NIFTY SMALLCAP250 MOMENTUM QUALITY 100"
+            - option "PERMITTED TO TRADE"
+            - option "SECURITIES IN F&O"
+          - link "Add a new Category Tab" [ref=e166] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=e169]:
+          - link "Refresh" [ref=e172] [cursor=pointer]:
+            - /url: "#"
+            - img "Refresh" [ref=e173]
+          - list [ref=e176]:
+            - listitem [ref=e177]: Advances -
+            - listitem [ref=e178]: Declines -
+            - listitem [ref=e179]: Unchanged -
+          - list [ref=e182]:
+            - listitem [ref=e183]:
+              - link "csv Download (.csv)" [ref=e184] [cursor=pointer]:
+                - /url: "#"
+                - img "csv" [ref=e185]
+                - generic [ref=e186]: Download (.csv)
+        - generic [ref=e190]:
+          - generic [ref=e191]: Change denomination
+          - group "Value Convention" [ref=e192]:
+            - generic [ref=e193]:
+              - radio "Lakhs" [ref=e194]
+              - generic [ref=e195] [cursor=pointer]: Lakhs
+            - generic [ref=e196]:
+              - radio "Crores" [checked] [ref=e197]
+              - generic [ref=e198] [cursor=pointer]: Crores
+            - generic [ref=e199]:
+              - radio "Billions" [ref=e200]
+              - generic [ref=e201] [cursor=pointer]: Billions
+        - generic [ref=e204]:
+          - generic [ref=e205]: Table is now unsorted
+          - table [ref=e206]:
+            - rowgroup [ref=e207]:
+              - row "Symbol Open High Low PREV. CLOSE LTP Indicative CLose chng %Chng Volume (shares) Value (₹ Crores) 52W H 52W L 30 d %chng" [ref=e208]:
+                - columnheader "Symbol" [ref=e209]:
+                  - link "Symbol" [ref=e210] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e211]: Symbol
+                - columnheader "Open" [ref=e212]:
+                  - generic [ref=e213]: Open
+                - columnheader "High" [ref=e214]:
+                  - generic [ref=e215]: High
+                - columnheader "Low" [ref=e216]:
+                  - generic [ref=e217]: Low
+                - columnheader "PREV. CLOSE" [ref=e218]:
+                  - generic [ref=e219]: PREV. CLOSE
+                - columnheader "LTP" [ref=e220]:
+                  - link "LTP" [ref=e221] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e222]: LTP
+                - columnheader "Indicative CLose" [ref=e223]:
+                  - link "Indicative CLose" [ref=e224] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e225]: Indicative CLose
+                - columnheader "chng" [ref=e226]:
+                  - link "chng" [ref=e227] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e228]: chng
+                - columnheader "%Chng" [ref=e229]:
+                  - link "%Chng" [ref=e230] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e231]: "%Chng"
+                - columnheader "Volume (shares)" [ref=e232]:
+                  - link "Volume (shares)" [ref=e233] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e234]: Volume
+                    - generic [ref=e235]: (shares)
+                - columnheader "Value (₹ Crores)" [ref=e236]:
+                  - link "Value (₹ Crores)" [ref=e237] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=e238]: Value
+                    - generic [ref=e239]: (₹ Crores)
+                - columnheader "52W H" [ref=e240]:
+                  - generic [ref=e241]: 52W H
+                - columnheader "52W L" [ref=e242]:
+                  - generic [ref=e243]: 52W L
+                - columnheader "30 d %chng" [ref=e244]:
+                  - generic [ref=e245]:
+                    - text: 30 d
+                    - text: "%chng"
+                - columnheader [ref=e246]
+            - rowgroup [ref=e247]:
+              - row [ref=e248]:
+                - cell [ref=e249]
+        - generic [ref=e252]:
+          - heading "Note" [level=3] [ref=e253]:
+            - generic [ref=e254]: Note
+          - list [ref=e256]:
+            - listitem [ref=e257]:
+              - text: "-"
+              - strong [ref=e258]: "%CHNG:"
+              - text: "% change is calculated with respect to adjusted price on ex-date for Corporate Actions like: Dividend, Bonus, Consolidation, Rights & Face Value Split."
+            - listitem [ref=e259]:
+              - text: "-"
+              - strong [ref=e260]: "52 W H/L:"
+              - text: 52 week High & Low prices are adjusted for Bonus, Consolidation, Split & Rights Corporate actions.
+            - listitem [ref=e261]: "- The legend for the 52-week H/L indicator is given below:"
+            - listitem [ref=e262]:
+              - text: "- for Stocks closer to 52-week high:"
+              - list [ref=e263]:
+                - listitem [ref=e264]:
+                  - img "3 Up Arrows"
+                  - text: "- within 0% and 2%"
+                - listitem [ref=e268]:
+                  - img "2 Up Arrows"
+                  - text: "- within 2% and 5%"
+                - listitem [ref=e271]:
+                  - img "1 Up Arrows"
+                  - text: "- within 5% and 7%"
+            - listitem [ref=e273]:
+              - text: "- Symbols for Stocks closer to 52-week low:"
+              - list [ref=e274]:
+                - listitem [ref=e275]:
+                  - img "3 Down Arrows"
+                  - text: "- within 0% and 2%"
+                - listitem [ref=e279]:
+                  - img "2 Down Arrows"
+                  - text: "- within 2% and 5%"
+                - listitem [ref=e282]:
+                  - img "2 Down Arrows"
+                  - text: "- within 5% and 7%"
+            - listitem [ref=e284]: "- In case, any of the index constituent undergo a scheme of arrangement (e.g. demerger), such stock will not be displayed under 'Market Watch - Equity/ Stock' section during Special Pre-Open session and it will be displayed post resumption of trading of such stock under 'Normal' market."
+            - listitem [ref=e285]: "- Data is displayed for securities where orders have been received during the pre-open session."
+            - listitem [ref=e286]: "- Trade Timings for T+0 settlement: One continuous trading session from 09:15 AM to 1:30 PM."
+            - listitem [ref=e287]: "- Price Band for T+0 settlement: Price band of +/- 1% (100 Basis points) based on close price of corresponding T+1 settled security, which will be re-calibrated throughout the trading hours after +/- 0.5% (50 basis points) movement in the LTP of T+1 settled security in the regular market."
+    - contentinfo [ref=e288]:
+      - generic [ref=e289]:
+        - generic [ref=e290]:
+          - generic [ref=e292]:
+            - heading "About NSE" [level=6] [ref=e293]
+            - list [ref=e294]:
+              - listitem [ref=e295]:
+                - link "About Us" [ref=e296] [cursor=pointer]:
+                  - /url: /national-stock-exchange/about-nse-company
+              - listitem [ref=e297]:
+                - link "Structure & Key Personnel" [ref=e298] [cursor=pointer]:
+                  - /url: /structure-key-personnel/corporate-structure
+              - listitem [ref=e299]:
+                - link "Investor Relations" [ref=e300] [cursor=pointer]:
+                  - /url: /investor-relations/announcements
+              - listitem [ref=e301]:
+                - link "Awards and Recognitions" [ref=e302] [cursor=pointer]:
+                  - /url: /national-stock-exchange/awards-recognition
+              - listitem [ref=e303]:
+                - link "Regulations" [ref=e304] [cursor=pointer]:
+                  - /url: /regulations/exchange-market-regulations-rules-byelaws-nseil
+              - listitem [ref=e305]:
+                - link "Event Gallery" [ref=e306] [cursor=pointer]:
+                  - /url: /event-gallery
+              - listitem [ref=e307]:
+                - link "Media" [ref=e308] [cursor=pointer]:
+                  - /url: /resources/exchange-communication-media-center
+              - listitem [ref=e309]:
+                - link "Holidays" [ref=e310] [cursor=pointer]:
+                  - /url: /resources/exchange-communication-holidays
+              - listitem [ref=e311]:
+                - link "Careers" [ref=e312] [cursor=pointer]:
+                  - /url: /careers-at-nse
+              - listitem [ref=e313]:
+                - link "Contact Us" [ref=e314] [cursor=pointer]:
+                  - /url: /contact/contact-us
+              - listitem [ref=e315]:
+                - link "Web Information Manager" [ref=e316] [cursor=pointer]:
+                  - /url: /static/contact/contact-us
+          - generic [ref=e318]:
+            - heading "NSE Group Companies" [level=6] [ref=e319]
+            - list [ref=e320]:
+              - listitem [ref=e321]:
+                - link "NAL Academy Limited" [ref=e322] [cursor=pointer]:
+                  - /url: /nse-academy/nse-academy-overview
+              - listitem [ref=e323]:
+                - link "NSE Clearing" [ref=e324] [cursor=pointer]:
+                  - /url: /nse-clearing
+              - listitem [ref=e325]:
+                - link "NSE Data & Analytics" [ref=e326] [cursor=pointer]:
+                  - /url: /nse-data-and-analytics
+              - listitem [ref=e327]:
+                - link "NSE Foundation" [ref=e328] [cursor=pointer]:
+                  - /url: /nse-foundation/about-us
+              - listitem [ref=e329]:
+                - link "NSE Indices" [ref=e330] [cursor=pointer]:
+                  - /url: /nse-indices
+              - listitem [ref=e331]:
+                - link "NSE International Exchange" [ref=e332] [cursor=pointer]:
+                  - /url: /nse-international-exchange/about
+              - listitem [ref=e333]:
+                - link "NSE International Clearing" [ref=e334] [cursor=pointer]:
+                  - /url: /nseint_clearing/nse-international-clearing-overview
+              - listitem [ref=e335]:
+                - link "NSE Investments" [ref=e336] [cursor=pointer]:
+                  - /url: /nse-investments
+              - listitem [ref=e337]:
+                - link "View all" [ref=e338] [cursor=pointer]:
+                  - /url: /national-stock-exchange/our-group
+          - generic [ref=e340]:
+            - heading "Products & Services" [level=6] [ref=e341]
+            - list [ref=e342]:
+              - listitem [ref=e343]:
+                - link "Equity Market" [ref=e344] [cursor=pointer]:
+                  - /url: /products-services/about-equity-market
+              - listitem [ref=e345]:
+                - link "Indices" [ref=e346] [cursor=pointer]:
+                  - /url: /products-services/about-indices
+              - listitem [ref=e347]:
+                - link "Emerge Platform" [ref=e348] [cursor=pointer]:
+                  - /url: /products-services/emerge-platform-about-sme
+              - listitem [ref=e349]:
+                - link "Mutual Funds" [ref=e350] [cursor=pointer]:
+                  - /url: /products-services/mf-about-mfss
+              - listitem [ref=e351]:
+                - link "Equity Derivatives" [ref=e352] [cursor=pointer]:
+                  - /url: /products-services/about-equity-derivatives
+              - listitem [ref=e353]:
+                - link "Currency Derivatives" [ref=e354] [cursor=pointer]:
+                  - /url: /products-services/about-currency-derivatives
+              - listitem [ref=e355]:
+                - link "Commodity Derivatives" [ref=e356] [cursor=pointer]:
+                  - /url: /products-services/about-commodity-derivatives
+              - listitem [ref=e357]:
+                - link "Interest Rate Derivatives" [ref=e358] [cursor=pointer]:
+                  - /url: /products-services/about-interest-rate-derivatives
+              - listitem [ref=e359]:
+                - link "Fixed Income and Debt" [ref=e360] [cursor=pointer]:
+                  - /url: /products-services/fixed-income-debt-overview
+              - listitem [ref=e361]:
+                - link "Public Issues" [ref=e362] [cursor=pointer]:
+                  - /url: /products-services/about-initial-public-offerings
+          - generic [ref=e364]:
+            - generic [ref=e365]:
+              - heading [level=6]
+              - list [ref=e366]:
+                - listitem [ref=e367]:
+                  - link "Disclaimer" [ref=e368] [cursor=pointer]:
+                    - /url: /nse-disclaimer
+                - listitem [ref=e369]:
+                  - link "Privacy Policy" [ref=e370] [cursor=pointer]:
+                    - /url: /privacy-policy
+                - listitem [ref=e371]:
+                  - link "Terms of Use" [ref=e372] [cursor=pointer]:
+                    - /url: /nse-terms-of-use
+                - listitem [ref=e373]:
+                  - link "Copyright" [ref=e374] [cursor=pointer]:
+                    - /url: /nse-copyright
+                - listitem [ref=e375]:
+                  - link "Feedback" [ref=e376] [cursor=pointer]:
+                    - /url: /feedback/new
+                - listitem [ref=e377]:
+                  - link "Site Map" [ref=e378] [cursor=pointer]:
+                    - /url: /sitemap
+                - listitem [ref=e379]:
+                  - link "Website Policies" [ref=e380] [cursor=pointer]:
+                    - /url: /website-policies
+                - listitem [ref=e381]:
+                  - link "Empanelment of Internal Auditors/System Auditor of Members" [ref=e382] [cursor=pointer]:
+                    - /url: https://inspection.nseindia.com/empanelment_auditor/auditor/auditorRegistration/
+                    - text: Empanelment of Internal
+                    - text: Auditors/System Auditor of Members
+                - listitem [ref=e383]:
+                  - link "List of Empaneled Audit Firms" [ref=e384] [cursor=pointer]:
+                    - /url: https://inspection.nseindia.com/empanelment_auditor/auditor/viewEmpanelledAuditors/
+                - listitem [ref=e385]:
+                  - link "Help" [ref=e386] [cursor=pointer]:
+                    - /url: /static/help
+            - generic:
+              - list
+        - generic [ref=e388]:
+          - generic [ref=e389]:
+            - generic [ref=e390]: Download NSE App
+            - generic [ref=e391]:
+              - link "appstore" [ref=e392] [cursor=pointer]:
+                - /url: https://apps.apple.com/in/app/nseindia/id6736678487
+                - img "appstore" [ref=e393]
+              - link "playstore" [ref=e394] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=com.nse.nseindia
+                - img "playstore" [ref=e395]
+          - generic [ref=e396]:
+            - generic [ref=e397]:
+              - generic [ref=e398]: Scan QR to
+              - generic [ref=e399]: Download App
+            - img "qr-code" [ref=e401]
+          - generic [ref=e402]:
+            - heading "NSE GO-BID" [level=3] [ref=e405]:
+              - link "NSE GO-BID" [ref=e406] [cursor=pointer]:
+                - /url: https://eipo.nseindia.com/eipodc/rest/login
+            - generic [ref=e408]:
+              - heading "Login to" [level=3] [ref=e409]
+              - link "NCFM" [ref=e411] [cursor=pointer]:
+                - /url: https://www.ncfm-india.com/ORE/OREloginPage.jsp
+    - generic [ref=e415]:
+      - generic [ref=e417]:
+        - paragraph [ref=e418]:
+          - link "Copyright ©" [ref=e419] [cursor=pointer]:
+            - /url: /nse-copyright
+          - text: National Stock Exchange of India Ltd. All rights reserved. Best viewed in Chrome and 1366 X 768 resolution. Recommended to use latest browser versions.
+        - paragraph [ref=e420]:
+          - generic [ref=e421]:
+            - img "GIGW" [ref=e422]
+            - text: GIGW Compliant
+      - generic [ref=e424]:
+        - list [ref=e425]:
+          - listitem [ref=e426]:
+            - link "Whatsapp chatbot of National Stock Exchange" [ref=e427] [cursor=pointer]:
+              - /url: https://wa.me/918655986573?text=Hi
+              - generic [ref=e428]: 
+          - listitem [ref=e429]:
+            - link "Facebook Page of National Stock Exchange" [ref=e430] [cursor=pointer]:
+              - /url: https://www.facebook.com/NationalStockExchange/
+              - generic [ref=e431]: 
+          - listitem [ref=e432]:
+            - link "Twitter Profile of NSEIndia" [ref=e433] [cursor=pointer]:
+              - /url: https://twitter.com/NSEIndia?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor
+              - img [ref=e434]
+          - listitem [ref=e436]:
+            - link "LinkedIn Profile of NSEIndia" [ref=e437] [cursor=pointer]:
+              - /url: https://in.linkedin.com/company/national-stock-exchange-of-india-limited
+              - generic [ref=e438]: 
+          - listitem [ref=e439]:
+            - link "YouTube Channel of NSEIndia" [ref=e440] [cursor=pointer]:
+              - /url: https://www.youtube.com/user/NSEIL1india
+              - generic [ref=e441]: 
+          - listitem [ref=e442]:
+            - link "Instagram Profile of NSEIndia" [ref=e443] [cursor=pointer]:
+              - /url: https://www.instagram.com/nseindia
+              - generic [ref=e444]: 
+          - listitem [ref=e445]:
+            - link "RSS Feed of NSEIndia" [ref=e446] [cursor=pointer]:
+              - /url: https://www.nseindia.com/rss-feed
+              - generic [ref=e447]: 
+        - text: 2 May 2026 | 10:26 (IST)
+    - text:  
+  - generic "Go to Top" [ref=e448] [cursor=pointer]:
+    - img [ref=e449]:
+      - generic [ref=e452]: ↑

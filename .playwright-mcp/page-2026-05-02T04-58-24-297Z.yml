@@ -1,0 +1,345 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e9]:
+      - paragraph [ref=e11]:
+        - emphasis [ref=e12]
+        - text: An investment called India
+      - list [ref=e14]:
+        - listitem [ref=e15]:
+          - link "ABOUT US" [ref=e16] [cursor=pointer]:
+            - /url: /about-us
+        - listitem [ref=e17]:
+          - link "MEDIA" [ref=e18] [cursor=pointer]:
+            - /url: /media
+        - listitem [ref=e19]:
+          - link "CONTACT US" [ref=e20] [cursor=pointer]:
+            - /url: /contact-us
+        - listitem [ref=e21]:
+          - link "CAREERS" [ref=e22] [cursor=pointer]:
+            - /url: /careers
+        - listitem [ref=e23]:
+          - link "LOGIN" [ref=e24] [cursor=pointer]:
+            - /url: https://www.connect2nse.com/iislNet/
+        - listitem [ref=e25]:
+          - link "bookmark this page" [ref=e26] [cursor=pointer]:
+            - /url: "#"
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - heading "Logo" [level=1]:
+            - link "Logo" [ref=e33] [cursor=pointer]:
+              - /url: /
+              - img "Logo" [ref=e34]
+        - list [ref=e36]:
+          - listitem [ref=e37]:
+            - button "MARKET DATA" [ref=e38] [cursor=pointer]
+          - listitem [ref=e39]:
+            - link "INDICES" [ref=e40] [cursor=pointer]:
+              - /url: "#"
+          - listitem:
+            - link:
+              - /url: "#"
+          - listitem [ref=e41]:
+            - button "OFFERINGS" [ref=e42] [cursor=pointer]
+          - listitem [ref=e43]:
+            - button "REPORTS" [ref=e44] [cursor=pointer]
+          - listitem [ref=e45]:
+            - button "RESOURCES" [ref=e46] [cursor=pointer]
+          - listitem
+          - listitem
+          - listitem
+          - listitem
+          - listitem
+      - group [ref=e51]:
+        - generic [ref=e52] [cursor=pointer]:
+          - button "Submit"
+      - list [ref=e54]:
+        - listitem [ref=e55]:
+          - img [ref=e56]
+        - listitem [ref=e57]:
+          - paragraph [ref=e58]: "23997.55"
+          - text: "-180.10 -0.74%"
+  - generic [ref=e64]:
+    - list [ref=e69]:
+      - listitem [ref=e70]:
+        - link "Home" [ref=e71] [cursor=pointer]:
+          - /url: ../../home
+      - listitem [ref=e72]:
+        - text: ">"
+        - link "Indices" [ref=e73] [cursor=pointer]:
+          - /url: ../../indices
+      - listitem [ref=e74]:
+        - text: ">"
+        - link "Equity" [ref=e75] [cursor=pointer]:
+          - /url: ../equity
+      - listitem [ref=e76]:
+        - text: ">"
+        - link "Broad based Indices" [ref=e77] [cursor=pointer]:
+          - /url: "javascript: void(0)"
+    - heading "Broad Based Indices" [level=3] [ref=e81]
+    - generic [ref=e89]:
+      - generic:
+        - generic:
+          - generic [ref=e91]:
+            - heading "These indices consist of the large, liquid stocks listed on the Exchange." [level=2] [ref=e92]
+            - paragraph [ref=e93]: They serve as a benchmark for measuring the performance of the stocks or portfolios such as mutual fund investments.
+          - list [ref=e96]:
+            - listitem [ref=e97]:
+              - text: "-"
+              - link "Nifty 50" [ref=e98] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/NIFTY--50
+            - listitem [ref=e99]:
+              - text: "-"
+              - link "Nifty Next 50" [ref=e100] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-next-50
+            - listitem [ref=e101]:
+              - text: "-"
+              - link "Nifty 100" [ref=e102] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nfity100
+            - listitem [ref=e103]:
+              - text: "-"
+              - link "Nifty 200" [ref=e104] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty200
+            - listitem [ref=e105]:
+              - text: "-"
+              - link "Nifty Total Market" [ref=e106] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-total-market
+            - listitem [ref=e107]:
+              - text: "-"
+              - link "Nifty 500" [ref=e108] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty500
+            - listitem [ref=e109]:
+              - text: "-"
+              - link "Nifty500 Multicap 50:25:25" [ref=e110] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty500-multicap-50-25-25-index
+            - listitem [ref=e111]:
+              - text: "-"
+              - link "Nifty500 LargeMidSmall Equal-Cap Weighted" [ref=e112] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty500-large-midsmall-equal-cap-weighted
+            - listitem [ref=e113]:
+              - text: "-"
+              - link "Nifty Midcap150" [ref=e114] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/niftymidcap150
+            - listitem [ref=e115]:
+              - text: "-"
+              - link "Nifty Midcap 50" [ref=e116] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/niftymidcap50
+            - listitem [ref=e117]:
+              - text: "-"
+              - link "Nifty Midcap Select" [ref=e118] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-midcap-select-index
+            - listitem [ref=e119]:
+              - text: "-"
+              - link "Nifty Midcap 100" [ref=e120] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/NIFTY-Midcap-100
+            - listitem [ref=e121]:
+              - text: "-"
+              - link "Nifty Smallcap 500" [ref=e122] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-smallcap-500
+            - listitem [ref=e123]:
+              - text: "-"
+              - link "Nifty Smallcap 250" [ref=e124] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/niftysmallcap250
+            - listitem [ref=e125]:
+              - text: "-"
+              - link "Nifty Smallcap 50" [ref=e126] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/niftysmallcap50
+            - listitem [ref=e127]:
+              - text: "-"
+              - link "Nifty Smallcap 100" [ref=e128] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/NIFTY-Smallcap-100
+            - listitem [ref=e129]:
+              - text: "-"
+              - link "Nifty Microcap 250" [ref=e130] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-microcap-250
+            - listitem [ref=e131]:
+              - text: "-"
+              - link "Nifty LargeMidcap 250" [ref=e132] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-largemidcap-250
+            - listitem [ref=e133]:
+              - text: "-"
+              - link "Nifty MidSmallcap 400" [ref=e134] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/niftymidsmallcap400
+            - listitem [ref=e135]:
+              - text: "-"
+              - link "Nifty MidSmallcap400 50:50" [ref=e136] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-midsmallcap400-50-50
+            - listitem [ref=e137]:
+              - text: "-"
+              - link "Nifty India FPI 150" [ref=e138] [cursor=pointer]:
+                - /url: /indices/equity/broad-based-indices/nifty-india-fpi-150
+  - contentinfo [ref=e139]:
+    - list [ref=e146]:
+      - listitem [ref=e147]:
+        - heading "Market Data" [level=3] [ref=e148]
+        - list [ref=e149]:
+          - listitem [ref=e150]:
+            - link "Live Indices Watch" [ref=e151] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e152]:
+            - link "Equity Stock Watch" [ref=e153] [cursor=pointer]:
+              - /url: "#"
+            - link:
+              - /url: "#"
+          - listitem [ref=e154]:
+            - link "Index Movers" [ref=e155] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e156]:
+            - link "Exchange Traded Funds" [ref=e157] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e158]:
+            - link "Advanced Charting" [ref=e159] [cursor=pointer]:
+              - /url: /market-data/advanced-charting
+          - listitem [ref=e160]:
+            - link "Return Profile" [ref=e161] [cursor=pointer]:
+              - /url: /market-data/return-profile
+      - listitem [ref=e162]:
+        - heading "Indices" [level=3] [ref=e163]
+        - list [ref=e164]:
+          - listitem [ref=e165]:
+            - link "Broad based Indices" [ref=e166] [cursor=pointer]:
+              - /url: /indices/equity/broad-based-indices
+          - listitem [ref=e167]:
+            - link "Sectoral Indices" [ref=e168] [cursor=pointer]:
+              - /url: /indices/equity/sectoral-indices
+          - listitem [ref=e169]:
+            - link "Thematic Indices" [ref=e170] [cursor=pointer]:
+              - /url: /indices/equity/thematic-indices
+          - listitem [ref=e171]:
+            - link "Strategy Indices" [ref=e172] [cursor=pointer]:
+              - /url: /indices/equity/strategic-indices
+          - listitem [ref=e173]:
+            - link "G-SEC Indices" [ref=e174] [cursor=pointer]:
+              - /url: /indices/fixed-income/gsec-indices
+          - listitem [ref=e175]:
+            - link "Sovereign Green Bond Indices" [ref=e176] [cursor=pointer]:
+              - /url: /indices/fixed-income/sovereign-green-bond-indices
+          - listitem [ref=e177]:
+            - link "SDL Indices" [ref=e178] [cursor=pointer]:
+              - /url: /indices/fixed-income/sdl-indices
+          - listitem [ref=e179]:
+            - link "Corporate Bond Indices" [ref=e180] [cursor=pointer]:
+              - /url: /indices/fixed-income/corporate-bond-indices
+          - listitem [ref=e181]:
+            - link "Municipal Bond Indices" [ref=e182] [cursor=pointer]:
+              - /url: /indices/fixed-income/municipal-bond-indices
+          - listitem [ref=e183]:
+            - link "Money Market Indices" [ref=e184] [cursor=pointer]:
+              - /url: /indices/fixed-income/money-market-indices
+          - listitem [ref=e185]:
+            - link "Target Maturity Indices" [ref=e186] [cursor=pointer]:
+              - /url: /indices/fixed-income/target-maturity-index
+          - listitem [ref=e187]:
+            - link "Fixed Income Aggregates" [ref=e188] [cursor=pointer]:
+              - /url: /indices/fixed-income/fixed-income-aggregate-index-series
+          - listitem [ref=e189]:
+            - link "Multi Asset" [ref=e190] [cursor=pointer]:
+              - /url: /indices/multi-asset/multi-asset-indices
+      - listitem [ref=e191]:
+        - heading "Offerings" [level=3] [ref=e192]
+        - list [ref=e193]:
+          - listitem [ref=e194]:
+            - link "Index Licensing" [ref=e195] [cursor=pointer]:
+              - /url: /offerings/index-licensing
+          - listitem [ref=e196]:
+            - link "Data Subscription" [ref=e197] [cursor=pointer]:
+              - /url: /offerings/index-data-subscription
+          - listitem [ref=e198]:
+            - link "Index Customisation" [ref=e199] [cursor=pointer]:
+              - /url: /offerings/index-customization
+      - listitem [ref=e200]:
+        - heading "Reports" [level=3] [ref=e201]
+        - list [ref=e202]:
+          - listitem [ref=e203]:
+            - link "Daily Reports" [ref=e204] [cursor=pointer]:
+              - /url: /reports/daily-reports
+          - listitem [ref=e205]:
+            - link "Monthly Report" [ref=e206] [cursor=pointer]:
+              - /url: /reports/monthly-reports
+          - listitem [ref=e207]:
+            - link "Historical Data" [ref=e208] [cursor=pointer]:
+              - /url: /reports/historical-data
+          - listitem [ref=e209]:
+            - link "Index Factsheet" [ref=e210] [cursor=pointer]:
+              - /url: /reports/index-factsheet
+          - listitem [ref=e211]:
+            - link "Index Dashboard" [ref=e212] [cursor=pointer]:
+              - /url: /reports/index-dashboard
+          - listitem [ref=e213]:
+            - link "Benchmark Riskometer" [ref=e214] [cursor=pointer]:
+              - /url: /reports/benchmark-riskometer
+          - listitem [ref=e215]:
+            - link "Benchmark Codes" [ref=e216] [cursor=pointer]:
+              - /url: /BenchmarkCodes/Nifty_Indices_Benchmark_Codes.pdf
+          - listitem [ref=e217]:
+            - link "Nifty Passive Insights" [ref=e218] [cursor=pointer]:
+              - /url: /reports/nifty-passive-insights
+          - listitem [ref=e219]:
+            - link "Research Paper" [ref=e220] [cursor=pointer]:
+              - /url: /reports/research-paper
+          - listitem [ref=e221]:
+            - link "Market Consultation" [ref=e222] [cursor=pointer]:
+              - /url: /reports/market-consultation
+          - listitem [ref=e223]:
+            - link "EOD Index File" [ref=e224] [cursor=pointer]:
+              - /url: https://www.connect2nse.com/iislNet/
+      - listitem [ref=e225]:
+        - heading "Resources" [level=3] [ref=e226]
+        - list [ref=e227]:
+          - listitem [ref=e228]:
+            - link "Holiday Calendar" [ref=e229] [cursor=pointer]:
+              - /url: /resources/holiday-calendar
+          - listitem [ref=e230]:
+            - link "Authorised Data Vendors" [ref=e231] [cursor=pointer]:
+              - /url: /resources/authorized-data-vendors
+          - listitem [ref=e232]:
+            - link "Index Methodology" [ref=e233] [cursor=pointer]:
+              - /url: /resources/index-methodology
+          - listitem [ref=e234]:
+            - link "Industry Classification" [ref=e235] [cursor=pointer]:
+              - /url: /resources/industry-classification
+          - listitem [ref=e236]:
+            - link "Investible Weight Factors" [ref=e237] [cursor=pointer]:
+              - /url: /resources/investible-weight-factors
+          - listitem [ref=e238]:
+            - link "IOSCO Compliance" [ref=e239] [cursor=pointer]:
+              - /url: /resources/iosco-compliance
+          - listitem [ref=e240]:
+            - link "Index Concepts" [ref=e241] [cursor=pointer]:
+              - /url: /resources/index-concepts
+      - listitem [ref=e242]:
+        - heading "About Us" [level=3] [ref=e243]:
+          - link "About Us" [ref=e244] [cursor=pointer]:
+            - /url: /about-us
+        - heading "Media" [level=3] [ref=e245]:
+          - link "Media" [ref=e246] [cursor=pointer]:
+            - /url: /media
+        - heading "Contact Us" [level=3] [ref=e247]:
+          - link "Contact Us" [ref=e248] [cursor=pointer]:
+            - /url: /contact-us
+        - heading "Careers" [level=3] [ref=e249]:
+          - link "Careers" [ref=e250] [cursor=pointer]:
+            - /url: /careers
+        - heading "Sitemap" [level=3] [ref=e251]:
+          - link "Sitemap" [ref=e252] [cursor=pointer]:
+            - /url: /sitemap
+    - generic [ref=e257]:
+      - generic [ref=e258]:
+        - text: Copyright © 2018 NSE Indices Limited
+        - link "Disclaimer" [ref=e259] [cursor=pointer]:
+          - /url: /disclaimer
+        - link "Terms of use" [ref=e260] [cursor=pointer]:
+          - /url: /terms-of-use
+      - list [ref=e262]:
+        - listitem [ref=e263] [cursor=pointer]:
+          - link [ref=e264]:
+            - /url: https://www.facebook.com/NationalStockExchange/
+        - listitem [ref=e266] [cursor=pointer]:
+          - link [ref=e267]:
+            - /url: https://x.com/nseindices?s=11
+        - listitem [ref=e269] [cursor=pointer]:
+          - link [ref=e270]:
+            - /url: https://www.linkedin.com/company/nse-indices-limited/posts/?feedView=all
+        - listitem [ref=e272] [cursor=pointer]:
+          - link [ref=e273]:
+            - /url: https://www.youtube.com/channel/UCjDnt2b8-I7bu4MRF9Uwf-A
