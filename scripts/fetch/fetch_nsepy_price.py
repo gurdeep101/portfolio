@@ -38,6 +38,7 @@ import yfinance as yf
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message=".*utcnow.*")
+warnings.filterwarnings("ignore", message=".*no explicit representation of timezones.*")
 
 # ── paths and constants ───────────────────────────────────────────────────────
 
@@ -48,6 +49,24 @@ DAILY_FILE    = PRICES_DIR / "daily_adj_close.csv"
 
 FAILURE_THRESHOLD_PCT = 0.08   # abort if > this fraction return no data from any source
 HISTORY_WEEKS         = 52     # weeks of history pulled on first run
+
+# Symbols that were renamed on NSE.  Maps current_symbol → (old_symbol, last_date_under_old_name).
+# When --backfill-renames is used, history before the cutoff is fetched under the old name
+# and written into daily_adj_close.csv under the current (new) name.
+# SHRIRAMFIN: Shriram Finance Ltd was formed Dec 2022 from the merger of Shriram Transport
+# Finance (SRTRANSFIN) and Shriram City Union Finance.  Pre-merger data lives under SRTRANSFIN.
+SYMBOL_RENAMES: dict[str, tuple[str, date]] = {
+    "SHRIRAMFIN": ("SRTRANSFIN", date(2022, 12, 25)),
+}
+
+# Symbols with pre-listing data contamination.  Maps symbol → first valid equity date.
+# Rows before this date are pre-IPO bond/instrument data returned by the NSE API under
+# the same ticker.  They are NaN'd out during fetch and cleaned by --clean-min-dates.
+# IREDA: equity IPO Nov 29 2023; data before this date is from IREDA's NSE-listed
+# tax-free bonds (different instrument, same ticker).
+SYMBOL_MIN_DATES: dict[str, date] = {
+    "IREDA": date(2023, 11, 29),
+}
 
 # ── rate-limit / retry configuration ─────────────────────────────────────────
 # NSE blocks aggressive automated traffic. Randomised sleep between calls
@@ -64,6 +83,13 @@ NSE_RETRY_BASE_S = 2.0
 # the exchange is likely blocking the session — pause before continuing.
 NSE_CIRCUIT_BREAKER = 5
 NSE_CIRCUIT_PAUSE_S = 30.0
+
+# Source bypass: if a source accumulates this many cumulative failures, stop calling
+# it and pass remaining symbols directly to the next source in the cascade.
+# Unlike the circuit breaker (consecutive failures, resets on success), this counter
+# is cumulative and never resets — sustained failures indicate the source is
+# unreliable for this session.
+SOURCE_FAILURE_THRESHOLD = 25
 
 # yfinance fallback: sleep between per-symbol Ticker.history() calls
 YF_SLEEP_S = 0.5
@@ -136,13 +162,19 @@ def write_weekly_snapshot(df: pd.DataFrame, week_str: str) -> None:
         sys.exit(1)
 
 
-def update_daily_file(df: pd.DataFrame, force: bool = False) -> None:
+def update_daily_file(
+    df: pd.DataFrame, force: bool = False, total_symbols: int = 0
+) -> None:
     """Append new rows to the cumulative daily adj_close wide-format CSV.
 
     The file uses dates as the row index and symbols as columns.
     Default mode is append-only (historical rows are never removed).
     Force mode refreshes overlapping dates from newly fetched origin data.
     Exits with code 1 on read or write failure.
+
+    total_symbols: size of the full fetch universe (len(symbols) in main).
+    Used to reject dates where too few symbols have data — prevents a
+    partial yfinance-only batch from injecting phantom dates into the index.
     """
     adj = df[["symbol", "date", "adj_close"]].copy()
     adj["date"] = pd.to_datetime(adj["date"]).dt.date
@@ -150,6 +182,35 @@ def update_daily_file(df: pd.DataFrame, force: bool = False) -> None:
     pivot = adj.pivot_table(index="date", columns="symbol", values="adj_close")
     pivot.index = pd.to_datetime(pivot.index)
     pivot = pivot.sort_index()
+
+    # Guard: reject dates where fewer than 40% of the full universe has data.
+    # A date with only a handful of symbols is either an NSE holiday that
+    # slipped through, or a sparse historical batch (e.g. yfinance weekly).
+    # Both cases corrupt the date index used as the ground-truth trading calendar.
+    # Use the universe file for the quorum basis — not just the current batch size —
+    # so that partial runs (--limit N) cannot inject phantom dates.
+    try:
+        universe_size = len(pd.read_csv(UNIVERSE_FILE, usecols=["symbol"]))
+    except Exception:
+        universe_size = total_symbols if total_symbols > 0 else len(pivot.columns)
+    min_quorum = max(5, universe_size * 2 // 5)  # 40% of full universe → 100 for 250 syms
+    row_coverage = pivot.notna().sum(axis=1)
+    thin_dates = (row_coverage < min_quorum).sum()
+    if thin_dates:
+        print(
+            f"  Dropping {thin_dates} thin date(s) with < {min_quorum} symbols "
+            f"(quorum={min_quorum}, universe={universe_size})."
+        )
+    pivot = pivot[row_coverage >= min_quorum]
+
+    # Apply min-date overrides: erase pre-listing data for symbols in SYMBOL_MIN_DATES.
+    for sym, min_dt in SYMBOL_MIN_DATES.items():
+        if sym in pivot.columns:
+            pivot.loc[pivot.index < pd.Timestamp(min_dt), sym] = float("nan")
+
+    if pivot.empty:
+        print("  No rows survive quorum filter — nothing to write.")
+        return
 
     if DAILY_FILE.exists():
         try:
@@ -298,11 +359,10 @@ def _normalise_nselib_df(raw_df: pd.DataFrame, symbol: str) -> pd.DataFrame:
     df = df[needed].dropna(subset=["close", "date"])
     df = df[df["close"] > 0]
 
-    # Drop zero-volume rows where close equals the previous day's close.
-    # NSE sometimes repeats the prior session's price on exchange holidays.
-    zero_vol = (df["volume"] == 0) & (df["close"] == df["close"].shift(1))
-    if zero_vol.any():
-        df = df[~zero_vol]
+    # Drop zero-volume rows — NSE returns stale prices on market holidays
+    # (exchange closure). Nifty 250 stocks are liquid; genuine zero-volume
+    # trading days do not occur. Any zero-volume row is a holiday carry-forward.
+    df = df[df["volume"] > 0]
 
     return df.reset_index(drop=True)
 
@@ -362,16 +422,27 @@ def fetch_all_nselib(
     frames: list[pd.DataFrame] = []
     failed: list[str] = []
     consecutive_failures = 0
+    total_failures = 0
     total = len(symbols)
 
     print(f"\nFetching prices via nselib ({total} symbols)…")
 
     for i, sym in enumerate(symbols, 1):
+        if total_failures >= SOURCE_FAILURE_THRESHOLD:
+            remaining = symbols[i - 1:]
+            failed.extend(remaining)
+            print(
+                f"  nselib: {SOURCE_FAILURE_THRESHOLD} cumulative failures — "
+                f"bypassing {len(remaining)} remaining symbols, escalating to jugaad-data."
+            )
+            break
+
         df = fetch_symbol_nselib(sym, start, end)
 
         if df.empty:
             failed.append(sym)
             consecutive_failures += 1
+            total_failures += 1
             if consecutive_failures >= NSE_CIRCUIT_BREAKER:
                 # Burst of failures suggests the session is being blocked — pause
                 # to let NSE's rate-limit window reset before continuing.
@@ -494,12 +565,23 @@ def fetch_failed_via_jugaad(
     print(f"\n  jugaad-data fallback: recovering {len(symbols)} symbols…")
     frames: list[pd.DataFrame] = []
     still_missing: list[str] = []
+    total_failures = 0
 
     for i, sym in enumerate(symbols, 1):
+        if total_failures >= SOURCE_FAILURE_THRESHOLD:
+            remaining = symbols[i - 1:]
+            still_missing.extend(remaining)
+            print(
+                f"  jugaad-data: {SOURCE_FAILURE_THRESHOLD} cumulative failures — "
+                f"bypassing {len(remaining)} remaining symbols, escalating to yfinance."
+            )
+            break
+
         series = meta.get(sym, "EQ")
         df = fetch_symbol_jugaad(sym, start, end, series)
         if df.empty:
             still_missing.append(sym)
+            total_failures += 1
         else:
             frames.append(df)
         if i % 10 == 0:
@@ -652,6 +734,124 @@ def _run_cascade(
     return combined, all_missing
 
 
+# ── symbol-rename backfill ────────────────────────────────────────────────────
+
+
+def backfill_renamed_symbols(symbols: list[str], meta: dict[str, str]) -> None:
+    """Fetch pre-rename history for symbols that changed NSE tickers.
+
+    For each entry in SYMBOL_RENAMES, checks whether the current symbol has
+    NaN gaps in daily_adj_close.csv before the rename cutoff date.  If gaps
+    exist, fetches the old symbol name via the nselib→jugaad→yfinance cascade
+    and writes the data into daily_adj_close.csv under the new symbol name.
+
+    This is a one-shot operation — run with --backfill-renames once to fix the
+    historical record.  Normal weekly fetches do not call this function.
+    """
+    if not DAILY_FILE.exists():
+        print("  daily_adj_close.csv does not exist — run a normal fetch first.")
+        return
+
+    try:
+        existing = pd.read_csv(DAILY_FILE, index_col=0, parse_dates=True)
+    except (OSError, pd.errors.ParserError) as e:
+        print(f"  ERROR reading daily_adj_close.csv: {e}")
+        return
+
+    for new_sym, (old_sym, cutoff) in SYMBOL_RENAMES.items():
+        if new_sym not in symbols:
+            continue
+
+        print(f"\n── Backfilling {new_sym} from old symbol {old_sym} (pre-{cutoff}) ──")
+
+        # Identify gap dates before the cutoff where new_sym is NaN
+        pre_cutoff = existing[existing.index <= pd.Timestamp(cutoff)]
+        if new_sym in pre_cutoff.columns:
+            gaps = pre_cutoff[pre_cutoff[new_sym].isna()]
+        else:
+            gaps = pre_cutoff  # column doesn't exist at all — backfill everything
+
+        if gaps.empty:
+            print(f"  {new_sym}: No pre-rename gaps found — skipping.")
+            continue
+
+        gap_start = gaps.index.min().date()
+        gap_end   = gaps.index.max().date()
+        print(
+            f"  {new_sym} has {len(gaps)} gap-day(s) before cutoff, "
+            f"fetching {old_sym} from {gap_start} to {gap_end}…"
+        )
+
+        old_meta = {old_sym: meta.get(new_sym, "EQ")}
+        df_old, missing = _run_cascade([old_sym], old_meta, gap_start, gap_end)
+
+        if df_old.empty:
+            print(f"  WARNING: No data returned for {old_sym} — backfill failed.")
+            continue
+
+        # Relabel old symbol as new symbol before writing
+        df_old = df_old.copy()
+        df_old["symbol"] = new_sym
+
+        rows_before = len(existing)
+        update_daily_file(df_old, force=True, total_symbols=len(symbols))
+        try:
+            updated = pd.read_csv(DAILY_FILE, index_col=0, parse_dates=True)
+        except Exception:
+            updated = existing
+        print(
+            f"  {new_sym}: backfill complete — "
+            f"daily_adj_close.csv grew from {rows_before} to {len(updated)} rows."
+        )
+
+
+# ── pre-listing data cleanup ──────────────────────────────────────────────────
+
+
+def clean_min_dates() -> None:
+    """Remove pre-listing contamination rows from daily_adj_close.csv.
+
+    For each symbol in SYMBOL_MIN_DATES, sets all cells before the listed min date
+    to NaN.  This is a one-shot operation: run with --clean-min-dates once to purge
+    bond-instrument data (or other pre-IPO artefacts) stored under the equity ticker.
+    Future fetches will not re-introduce contaminated rows because update_daily_file()
+    applies the same SYMBOL_MIN_DATES filter before writing.
+    """
+    if not DAILY_FILE.exists():
+        print("  daily_adj_close.csv does not exist — nothing to clean.")
+        return
+
+    try:
+        df = pd.read_csv(DAILY_FILE, index_col=0, parse_dates=True)
+    except (OSError, pd.errors.ParserError) as e:
+        print(f"  ERROR reading daily_adj_close.csv: {e}")
+        return
+
+    total_cleared = 0
+    for sym, min_dt in SYMBOL_MIN_DATES.items():
+        if sym not in df.columns:
+            print(f"  {sym}: not in daily_adj_close.csv — skipping.")
+            continue
+        mask = df.index < pd.Timestamp(min_dt)
+        cleared = int(mask.sum() - df.loc[mask, sym].isna().sum())
+        if cleared == 0:
+            print(f"  {sym}: no pre-{min_dt} data to clear.")
+            continue
+        df.loc[mask, sym] = float("nan")
+        total_cleared += cleared
+        print(f"  {sym}: cleared {cleared} pre-listing cell(s) (before {min_dt}).")
+
+    if total_cleared == 0:
+        print("  Nothing to clean — all symbols already have no pre-listing data.")
+        return
+
+    try:
+        df.to_csv(DAILY_FILE)
+        print(f"  daily_adj_close.csv updated ({total_cleared} cell(s) cleared).")
+    except OSError as e:
+        print(f"  ERROR writing daily_adj_close.csv: {e}")
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 
@@ -697,6 +897,20 @@ def main() -> None:
     parser.add_argument(
         "--force", action="store_true",
         help="Re-fetch full target window and refresh overlapping daily rows from origin sources",
+    )
+    parser.add_argument(
+        "--backfill-renames", action="store_true",
+        help=(
+            "One-time fix: fetch pre-rename history for symbols in SYMBOL_RENAMES "
+            "(e.g. SHRIRAMFIN from SRTRANSFIN before Dec 2022) and merge into daily_adj_close.csv."
+        ),
+    )
+    parser.add_argument(
+        "--clean-min-dates", action="store_true",
+        help=(
+            "One-time fix: erase pre-listing data for symbols in SYMBOL_MIN_DATES "
+            "(e.g. IREDA bond data before Nov 2023 equity IPO) from daily_adj_close.csv."
+        ),
     )
     args = parser.parse_args()
 
@@ -840,7 +1054,16 @@ def main() -> None:
         # write_weekly_snapshot() no-ops for files that already exist.
         write_historical_snapshots(df)
 
-        update_daily_file(df, force=args.force)
+        update_daily_file(df, force=args.force, total_symbols=total)
+
+    # ── symbol-rename backfill (one-time, optional) ───────────────────────────
+    if args.backfill_renames and not args.dry_run:
+        backfill_renamed_symbols(symbols, meta)
+
+    # ── pre-listing data cleanup (one-time, optional) ─────────────────────────
+    if args.clean_min_dates and not args.dry_run:
+        print("\n── Cleaning pre-listing contamination from daily_adj_close.csv ──")
+        clean_min_dates()
 
     # ── summary ───────────────────────────────────────────────────────────────
     symbols_fetched = len(df["symbol"].unique())

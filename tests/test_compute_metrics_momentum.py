@@ -1,4 +1,4 @@
-"""Unit tests for the momentum-only ranking factors in compute_metrics.py.
+"""Unit tests for the momentum-only ranking factors in shared/ranking.py.
 
 Tests cover:
   - compute_cross_speed: death cross scores zero; faster golden cross scores higher
@@ -17,7 +17,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.pipeline.compute_metrics import (
+from scripts.shared.ranking import (
     compute_cross_peak,
     compute_cross_speed,
     compute_rankings,

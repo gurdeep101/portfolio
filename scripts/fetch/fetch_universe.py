@@ -1,21 +1,16 @@
 """Fetch Nifty LargeMidcap 250 constituent list from NSE and write to data/universe/universe.csv.
 
-NSE's archive CSV URL is defunct (blocked by Akamai bot protection). This script
-uses a headless Playwright browser to establish a real browser session, then calls
-the NSE equity-stockIndices JSON API from within that session.
+Uses nselib.indices.constituent_stock_list(), which downloads the index composition
+CSV from NSE's archives subdomain (no Akamai bot-protection issues).
 
 Self-throttles: skips if universe.csv is less than MAX_AGE_DAYS old.
 Use --force to override. Exits with code 1 on download failure without touching
 the existing file.
-
-First-time setup: after `uv sync`, run once:
-    uv run playwright install chromium
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -30,8 +25,8 @@ MIN_ROWS = 240              # sanity bound: fewer rows → partial download
 MAX_ROWS = 260              # sanity bound: more rows → unexpected format change
 REINDEX_WARN_THRESHOLD = 5  # flag if symbol count changes by more than this
 
-NSE_INDEX = "NIFTY LARGEMIDCAP 250"
-NSE_MARKET_URL = "https://www.nseindia.com/market-data/live-equity-market"
+NSE_INDEX_CATEGORY = "BroadMarketIndices"
+NSE_INDEX_NAME = "Nifty LargeMidcap 250"
 
 
 def is_fresh(path: Path, max_age_days: int) -> bool:
@@ -56,110 +51,40 @@ def load_existing_symbols(path: Path) -> set[str]:
         return set()
 
 
-def fetch_via_browser() -> list[dict]:  # type: ignore[type-arg]
-    """Use a headless Playwright Chromium browser to bypass Akamai and call the NSE API.
+def fetch_constituent_list() -> pd.DataFrame:
+    """Download the Nifty LargeMidcap 250 constituent list via nselib.
 
-    Opens the NSE market page to acquire Akamai session cookies, then calls the
-    equity-stockIndices JSON endpoint from within that browser session.
-
-    Returns:
-        List of raw stock dicts from the NSE API response.
-
-    Raises:
-        RuntimeError: if the API returns an error payload.
-        SystemExit: if playwright is not installed.
-    """
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        print("ERROR: playwright not installed. Run: uv run playwright install chromium")
-        sys.exit(1)
-
-    index_encoded = NSE_INDEX.replace(" ", "%20")
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-            ],
-        )
-        context = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/124.0.0.0 Safari/537.36"
-            ),
-            locale="en-US",
-            timezone_id="Asia/Kolkata",
-            viewport={"width": 1366, "height": 768},
-            extra_http_headers={
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Sec-Ch-Ua": '"Google Chrome";v="124", "Chromium";v="124", "Not-A.Brand";v="99"',
-                "Sec-Ch-Ua-Mobile": "?0",
-                "Sec-Ch-Ua-Platform": '"Windows"',
-            },
-        )
-        # Mask navigator.webdriver to avoid triggering Akamai bot detection.
-        context.add_init_script(
-            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-        )
-        page = context.new_page()
-
-        print("  Opening NSE session (this may take ~30s)...")
-        try:
-            page.goto(NSE_MARKET_URL, wait_until="domcontentloaded", timeout=90_000)
-        except Exception:
-            # Akamai may abort HTTP/2 — retry waiting for full load event.
-            page.goto(NSE_MARKET_URL, wait_until="load", timeout=90_000)
-        page.wait_for_timeout(3000)  # let Akamai JS cookies settle
-
-        print(f"  Fetching {NSE_INDEX} constituent list via API...")
-        raw = page.evaluate(f"""() => {{
-            return fetch('/api/equity-stockIndices?index={index_encoded}', {{
-                credentials: 'include',
-                headers: {{'Accept': 'application/json, text/plain, */*'}}
-            }})
-            .then(r => r.json())
-            .then(d => JSON.stringify(d.data || []))
-            .catch(e => JSON.stringify({{error: String(e)}}));
-        }}""")
-
-        browser.close()
-
-    parsed = json.loads(raw)
-    if isinstance(parsed, dict) and "error" in parsed:
-        raise RuntimeError(parsed["error"])
-
-    # The first element is an index-level summary row — skip it.
-    stocks: list[dict] = [s for s in parsed if s.get("symbol") != NSE_INDEX]  # type: ignore[type-arg]
-    return stocks
-
-
-def build_dataframe(stocks: list[dict]) -> pd.DataFrame:  # type: ignore[type-arg]
-    """Convert the raw NSE API stock list into a normalised DataFrame.
-
-    Args:
-        stocks: Raw stock dicts from the NSE equity-stockIndices API.
+    nselib downloads the index composition CSV from NSE's archives subdomain,
+    which is not behind the same Akamai bot-protection as the live API.
 
     Returns:
         DataFrame with columns [symbol, company_name, series, isin_code, sector].
-        Rows with empty symbol strings are dropped.
+
+    Raises:
+        RuntimeError: if nselib raises or returns an empty/malformed DataFrame.
     """
-    rows = []
-    for s in stocks:
-        meta = s.get("meta") or {}
-        rows.append({
-            "symbol": s.get("symbol", "").strip(),
-            "company_name": meta.get("companyName", s.get("symbol", "")),
-            "series": s.get("series") or (meta.get("activeSeries") or ["EQ"])[0],
-            "isin_code": meta.get("isin", ""),
-            "sector": meta.get("industry", ""),
-        })
-    df = pd.DataFrame(rows)
+    try:
+        from nselib.indices import index_data
+    except ImportError:
+        raise RuntimeError("nselib not installed. Run: uv sync")
+
+    try:
+        raw: pd.DataFrame = index_data.constituent_stock_list(
+            NSE_INDEX_CATEGORY, NSE_INDEX_NAME
+        )
+    except Exception as exc:
+        raise RuntimeError(f"nselib fetch failed: {exc}") from exc
+
+    if raw is None or raw.empty:
+        raise RuntimeError("nselib returned an empty constituent list")
+
+    df = pd.DataFrame({
+        "symbol": raw["Symbol"].str.strip(),
+        "company_name": raw["Company Name"],
+        "series": raw["Series"],
+        "isin_code": raw["ISIN Code"],
+        "sector": raw["Industry"],
+    })
     return df[df["symbol"].str.len() > 0]
 
 
@@ -192,21 +117,14 @@ def main() -> None:
 
     prev_symbols = load_existing_symbols(OUT_FILE)
 
-    # --- Fetch via Playwright browser session --------------------------------
-    print(f"Downloading {NSE_INDEX} list from NSE...")
+    # --- Fetch via nselib -----------------------------------------------------
+    print(f"Downloading {NSE_INDEX_NAME} list from NSE...")
     try:
-        stocks = fetch_via_browser()
+        df = fetch_constituent_list()
     except Exception as e:
         print(f"ERROR: Download failed: {e}")
         print("Keeping existing universe.csv unchanged.")
         sys.exit(1)
-
-    if not stocks:
-        print("ERROR: API returned an empty stock list.")
-        print("Keeping existing universe.csv unchanged.")
-        sys.exit(1)
-
-    df = build_dataframe(stocks)
 
     # --- Row count sanity check ----------------------------------------------
     row_count = len(df)

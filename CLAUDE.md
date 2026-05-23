@@ -50,7 +50,7 @@ The strategy is pure momentum; P/E data is not used in rankings. Skip this step 
 
 **Step 6 — Validate data (gate)**
 ```
-uv run python scripts/pipeline/validate_data.py
+uv run python scripts/metrics/validate_data.py
 ```
 Read output carefully.
 - If exit code is 1: STOP. Report the blocking errors to the user. Do not rebalance.
@@ -59,7 +59,7 @@ Read output carefully.
 
 **Step 7 — Compute metrics**
 ```
-uv run python scripts/pipeline/compute_metrics.py
+uv run python scripts/metrics/compute_metrics.py
 ```
 Read the full output. This script also writes a row to `data/portfolio/performance.csv`.
 Pay attention to:
@@ -93,7 +93,7 @@ If no trades are needed, write an empty trades array with a notes explaining why
 
 **Step 10 — Execute rebalance**
 ```
-uv run python scripts/pipeline/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json
+uv run python scripts/strategy/update_portfolio.py --decisions data/decisions/YYYY-MM-DD.json
 ```
 Read the printed summary. Verify NAV is approximately preserved (minus transaction costs).
 
@@ -131,7 +131,7 @@ These are non-negotiable. Enforce them even if the strategy suggests otherwise.
 - **Universe only**: stocks must be in current `data/universe/universe.csv` at time of trade.
 - **Large moves**: if a stock moved >40% in the past week (flagged by validate_data.py),
   do NOT trade it. Flag it in the session log for manual review.
-- **Transaction cost**: 0.1% per trade side. Already deducted by pipeline/update_portfolio.py.
+- **Transaction cost**: 0.1% per trade side. Already deducted by strategy/update_portfolio.py.
 - **Rebalance once per session only.**
 
 ---
@@ -182,7 +182,11 @@ fully to cash is acceptable if no eligible stock meets the criteria.
   - `data/market/prices/daily_adj_close.csv` — cumulative daily adj_close (append-only)
 - **Args**: `--limit N` (first N symbols only), `--dry-run` (fetch but skip writes),
   `--months N` (ensure at least N months of history are present; downloads only missing data),
-  `--force` (re-fetch full target window and refresh overlapping daily rows from origin)
+  `--force` (re-fetch full target window and refresh overlapping daily rows from origin),
+  `--backfill-renames` (one-time fix: fetch pre-rename history for symbols in SYMBOL_RENAMES,
+  e.g. SHRIRAMFIN from SRTRANSFIN before Dec 2022),
+  `--clean-min-dates` (one-time fix: erase pre-listing contamination for symbols in SYMBOL_MIN_DATES,
+  e.g. IREDA bond data before Nov 2023 equity IPO)
 - **Exit 0**: success. Exit 1: >8% of symbols failed.
 - **Primary source**: nselib → jugaad-data → yfinance (per-symbol fallback chain).
 - **Note**: NSE sources do not provide adjusted close prices; `adj_close` equals `close`.
@@ -193,39 +197,43 @@ fully to cash is acceptable if no eligible stock meets the criteria.
 - **Writes**: `data/market/benchmark.csv` (date, price_index, tri_level, source)
 - **Args**: `--force` — re-fetch and overwrite all dates (default: fill missing dates only)
 - **Exit 0**: success or already up to date. Exit 1: yfinance fetch failed entirely.
-- **Behaviour**: reads all trading dates from `data/market/prices/daily_adj_close.csv`, compares with existing benchmark rows, and fetches missing dates from yfinance `^CNX250`. Source is always `price_index_yfinance`.
+- **Behaviour**: reads all trading dates from `data/market/prices/daily_adj_close.csv`, compares with existing benchmark rows, and fetches missing dates. Source is `price_index_yfinance` when yfinance succeeds; `price_index_nse` when the nselib fallback is used.
+- **Holiday cleanup**: after each successful fetch, any date present in the stock price calendar but absent from the Nifty 250 benchmark is confirmed as an NSE market holiday and is automatically removed from `daily_adj_close.csv`. This fixes phantom dates injected by yfinance returning stale carry-forward prices on closed days.
 
-### scripts/fetch/fetch_fundamentals.py
-- **Writes**: `data/market/fundamentals/YYYY-WW.json` for each week in `data/market/prices/` that lacks a fundamentals file
-- **Args**: `--force` — re-fetch and overwrite all existing files
-- **Data**: fetches real point-in-time P/E from NSE archives via `nselib.capital_market.pe_ratio(date)` using each week's actual trading date. Only `pe_ratio` is written; no other fundamental fields. Source = `"nselib"`.
-- **Date fallback**: tries the week's trading date then steps back up to 3 days to skip weekends/holidays.
-- **Runtime**: fast — one network call per week.
-- **Early exit**: exits 0 if all price weeks already have a fundamentals file (use `--force` to override).
-
-### scripts/pipeline/validate_data.py
-- **Reads**: prices, benchmark, universe, portfolio.json
-- **Prints**: PASS / WARNING / ERROR lines
+### scripts/metrics/validate_data.py
+- **Reads**: prices (daily_adj_close.csv + weekly snapshots), benchmark.csv, universe.csv, portfolio.json
+- **Prints**: PASS / WARNING / ERROR lines; price and benchmark completeness summary
+- **Args**: `--report` — print full per-symbol gap detail and all missing benchmark dates
 - **Exit 0**: pass (possibly with warnings). Exit 1: blocking error.
+- **Completeness checks**: scans `daily_adj_close.csv` for NaN gaps per universe symbol (within each symbol's active window); cross-checks benchmark coverage against the same trading-day index. Weekends and NSE holidays are never flagged — they are absent from the file's date index by construction.
 
-### scripts/pipeline/compute_metrics.py
+### scripts/metrics/compute_metrics.py
 - **Reads**: all data files
 - **Prints**: performance summary, ranking table, holdings table
 - **Writes**: appends to `data/portfolio/performance.csv`
 - **Args**: none
+- **Ranking logic**: imported from `scripts/shared/ranking.py`
 
-### scripts/pipeline/update_portfolio.py
+### scripts/strategy/update_portfolio.py
 - **Args**: `--decisions PATH` (required), `--dry-run` (optional), `--init` (first run only)
 - **Reads**: decisions JSON, portfolio.json, latest prices CSV
 - **Writes**: portfolio.json (in-place)
 
+### scripts/shared/ranking.py
+- **Purpose**: factor functions and composite ranking engine — no project dependencies
+- **Exports**: `compute_rankings()`, `compute_lt_momentum()`, `compute_nt_momentum()`,
+  `compute_cross_speed()`, `compute_cross_peak()`, `normalise_series()`, `WEIGHTS`, constants
+- **Used by**: `scripts/metrics/compute_metrics.py`, `scripts/backtest/backtest.py`
+
+### scripts/shared/types.py
+- **Purpose**: all TypedDict definitions for JSON schemas (`Portfolio`, `PerformanceResult`,
+  `BacktestWeekResult`, `DecisionsFile`, etc.)
+- **Used by**: all pipeline, strategy, and backtest scripts
+
 ### scripts/backtest/backtest.py
-- **Args**: `--months N` (optional integer, 1–60; prompts interactively if omitted)
+- **Args**: `--months N` (optional integer, 1–120; prompts interactively if omitted)
 - **Data window**: simulates the requested months back from today and loads an extra
-  420 calendar days for momentum / moving-average warm-up.
-- **Fundamentals**: uses the PE file for each ISO week where available; if that week
-  is missing, falls back to the latest prior PE file. Weeks before the first PE file
-  have no ranking-driven trades. Only `pe_ratio` is used.
+  520 calendar days for momentum / moving-average warm-up.
 - **Writes**:
   - `data/backtest/backtest_YYYYMMDD_Nmo.csv` — weekly NAV & return series
   - `data/backtest/backtest_YYYYMMDD_Nmo_trades.csv` — per-trade execution log
@@ -246,8 +254,7 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 ## Data Quality
 - Universe: N stocks, last updated YYYY-MM-DD
 - Prices: N symbols fetched, M missing/failed
-- Benchmark: latest value = X (date Y, source: price_index_nse)
-- Fundamentals: N symbols with valid P/E, M excluded
+- Benchmark: latest value = X (date Y, source: price_index_yfinance)
 - Validate output: PASS / PASS with warnings / FAILED
 - Any large-move flags or anomalies
 
@@ -287,6 +294,103 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
 
 ---
 
+## Known Data Gaps
+
+`validate_data.py` reports price gaps and missing benchmark dates. Most are explained
+by one of the four root causes below. This context helps distinguish fixable gaps from
+expected ones before triggering a costly `--force` re-fetch.
+
+### Category A — Phantom NSE market holidays
+
+**Root cause**: yfinance returns stale carry-forward prices for individual stocks on
+NSE market holidays (Independence Day, Republic Day, Christmas, Eid, etc.) with
+non-zero volume, bypassing the zero-volume filter and passing the 40%-quorum check.
+The Nifty 250 index is never published on holidays, so benchmark.csv correctly has
+no entry for those dates while daily_adj_close.csv incorrectly does.
+
+**Fix** (automatic): `fetch_benchmark.py` now removes these phantom dates from
+daily_adj_close.csv after every successful benchmark fetch. To clean the existing
+backlog immediately, run `fetch_benchmark.py --force`.
+
+### Category B — Month-end boundary gaps (IRFC, RECLTD, IDFCFIRSTB, NTPC, SBIN, PFC, HUDCO, MUTHOOTFIN)
+
+**Root cause**: nselib's `price_volume_data` API returns monthly chunks and frequently
+omits the last day of each month plus ~15–21 trading days into the next month. Because
+the normal fetch appends from the last known date forward, these slots are never
+revisited once skipped. jugaad-data (second-tier source) sometimes fills them in, but
+not reliably.
+
+**Fix**: Re-fetch the full history to give all three sources a chance to fill the gaps:
+```
+uv run python scripts/fetch/fetch_nsepy_price.py --force --months 240
+```
+This takes 30–60 minutes for 250 symbols. Run ad-hoc when gap counts are unacceptable.
+
+### Category C — TATACAP: 11.5-year gap (stock not listed on NSE)
+
+**Root cause**: Tata Capital Financial Services (TATACAP) was listed on NSE only for
+narrow windows:
+- 2009-03-16 → 2012-06-18 (listed)
+- 2012-06-18 → 2024-01-08 (not listed / suspended — 4,221 days)
+- 2024-01-08 → 2024-05-02 (listed again)
+- 2024-05-02 → 2025-10-13 (not listed again)
+- 2025-10-13 → present (listed)
+
+These gaps are real absences from the exchange, not data fetching errors. The
+`MIN_HISTORY_DAYS = 200` guard in ranking.py already excludes TATACAP from rankings
+whenever it has insufficient continuous history.
+
+**Fix**: None — accept as-is.
+
+### Category D — SHRIRAMFIN: symbol rename after merger
+
+**Root cause**: The symbol SHRIRAMFIN (Shriram Finance Ltd) only came into existence
+in December 2022, when Shriram Transport Finance and Shriram City Union Finance merged.
+Querying nselib for SHRIRAMFIN on pre-merger dates returns inconsistent partial data;
+the full pre-2022 history lives under the old symbol SRTRANSFIN.
+
+**Fix** (one-time, ~10 minutes):
+```
+uv run python scripts/fetch/fetch_nsepy_price.py --backfill-renames
+```
+This fetches SRTRANSFIN from the start of the data window to Dec 2022 and writes it
+into daily_adj_close.csv under the SHRIRAMFIN column. Run once; subsequent normal
+fetches will maintain SHRIRAMFIN going forward.
+
+### Category E — Small scattered gaps (≤42 days: PAGEIND, APLAPOLLO, BALKRISIND, CHOLAFIN, UNOMINDA, etc.)
+
+**Root cause**: Transient API call failures, network hiccups, or the zero-volume filter
+dropping a legitimate thin-trading day. Isolated incidents. Includes:
+- **CHOLAFIN** (42 gap-days in May–Dec 2023): scattered API failures, not month-end pattern
+- **UNOMINDA** (29 gap-days): data correctly covers from 2007 under the current ticker
+  (renamed from MINDAIND but backfill not needed); gaps are ordinary scattered misses
+
+**Fix**: `uv run python scripts/fetch/fetch_nsepy_price.py --force` (re-fetches last 52
+weeks; usually sufficient to fill sub-42-day gaps).
+
+### Category F — IREDA: pre-IPO bond-market data contamination
+
+**Root cause**: IREDA (Indian Renewable Energy Development Agency Ltd) had its equity
+IPO on November 29 2023. However, `daily_adj_close.csv` contains IREDA data from 2014
+because nselib returned data for IREDA's NSE-listed tax-free bonds under the same ticker
+before the equity listing. Bond prices are not equity prices; using them for momentum
+would give meaningless signals.
+
+**Evidence**: 262 gap-days scattered across 2014–2023, with no data on equity trading days
+in that window. Since IREDA has been trading equity for ~18 months, the bond-era data
+currently lies outside the computation window (520 calendar days), but backtests with
+start dates before Nov 2023 will use wrong prices.
+
+**Fix** (one-time):
+```
+uv run python scripts/fetch/fetch_nsepy_price.py --clean-min-dates
+```
+This sets all IREDA cells before 2023-11-29 to NaN in daily_adj_close.csv. Future
+fetches will not re-introduce the contamination — `update_daily_file()` applies the
+`SYMBOL_MIN_DATES` filter on every write.
+
+---
+
 ## Data Source Notes (fragility)
 
 - **data/universe/universe.csv**: downloaded from NSE archive. FRAGILE — NSE blocks scrapers.
@@ -302,11 +406,6 @@ Each `logs/session_YYYY-MM-DD.md` must contain all of these sections:
   The price index understates the true benchmark return by ~1.5%/yr (the index dividend yield),
   so active return will appear ~1.5%/yr better than reality. This is a permanent known limitation.
   `fetch/fetch_benchmark.py` source will always be `price_index_nse` or `price_index_yfinance`.
-
-- **Fundamentals**: P/E only, sourced from NSE archives via nselib.
-  Stocks with missing or non-positive P/E are excluded from ranking, not imputed.
-  Backtests use weekly PE files with latest-prior fallback for missing weeks; no
-  other fundamental fields are used.
 
 - **Corporate actions**: not automated. Manually check the NSE announcements page
   for held stocks before any session. Flag any splits, bonuses, or mergers in the log.

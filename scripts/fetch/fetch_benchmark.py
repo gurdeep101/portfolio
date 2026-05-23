@@ -30,12 +30,20 @@ BENCHMARK_FILE = DATA_DIR / "market" / "benchmark.csv"
 PRICES_DIR = DATA_DIR / "market" / "prices"
 DAILY_ADJ_CLOSE = PRICES_DIR / "daily_adj_close.csv"
 
+# Additional daily price files that share the same date index as daily_adj_close.csv.
+# These are cleaned alongside daily_adj_close when phantom NSE holidays are removed.
+EXTRA_DAILY_FILES = ["daily_high.csv", "daily_low.csv"]
+
 # Yahoo Finance ticker for the Nifty 250 price index (NOT total return).
 PRICE_INDEX_TICKER = "^CNX250"
 
 # Index name for the nselib capital_market.index_data fallback.
 # nselib uppercases it before URL-encoding, so case does not matter.
 NIFTY250_INDEX_NAME = "NIFTY LARGEMIDCAP 250"
+
+# The Nifty LargeMidcap 250 index base date: NSE backfilled historical values to
+# this date with a base value of 1000. No benchmark data exists before this date.
+INDEX_BASE_DATE = date(2005, 4, 1)
 
 
 def get_price_dates() -> list[str]:
@@ -181,6 +189,38 @@ def fetch_index_range(from_date: date, to_date: date) -> tuple[pd.DataFrame, str
     return pd.DataFrame(), ""
 
 
+def _clean_phantom_holidays(holiday_dates: list[str]) -> None:
+    """Remove confirmed NSE holiday rows from daily price files.
+
+    These are dates that exist in the stock trading calendar (daily_adj_close.csv)
+    but have no Nifty 250 benchmark value — meaning the market was closed and the
+    individual prices were stale carry-forwards from the previous day (typically
+    returned by yfinance, which doesn't distinguish holiday data from real data).
+
+    Only called when the benchmark API successfully returned data for *other* dates
+    in the same fetch window, so a missing value reliably means "market closed" rather
+    than "API failure".
+    """
+    holiday_set = set(holiday_dates)
+    files_to_clean = [DAILY_ADJ_CLOSE] + [
+        PRICES_DIR / name for name in EXTRA_DAILY_FILES if (PRICES_DIR / name).exists()
+    ]
+    for price_file in files_to_clean:
+        if not price_file.exists():
+            continue
+        try:
+            df = pd.read_csv(price_file, index_col=0, parse_dates=True)
+            before = len(df)
+            keep = ~pd.to_datetime(df.index).strftime("%Y-%m-%d").isin(holiday_set)
+            df = df[keep]
+            removed = before - len(df)
+            if removed:
+                df.to_csv(price_file)
+                print(f"  Removed {removed} NSE holiday row(s) from {price_file.name}.")
+        except Exception as e:
+            print(f"  WARNING: Could not clean {price_file.name}: {e}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -199,6 +239,9 @@ def main() -> None:
     existing_dates = set(df["date"].astype(str))
 
     target_dates = price_dates if args.force else [d for d in price_dates if d not in existing_dates]
+
+    # Drop dates before the index base date — no source has Nifty 250 data before this.
+    target_dates = [d for d in target_dates if date.fromisoformat(d) >= INDEX_BASE_DATE]
 
     if not target_dates:
         print("All benchmark dates are up to date. Use --force to refresh.")
@@ -229,7 +272,7 @@ def main() -> None:
 
     if skipped:
         for d in skipped:
-            print(f"  WARNING: No data for {d} (market holiday or data not yet available).")
+            print(f"  WARNING: No data for {d} (market holiday — will remove from price calendar).")
 
     if args.force:
         df = df[~df["date"].astype(str).isin(set(target_dates))]
@@ -245,6 +288,17 @@ def main() -> None:
         sys.exit(1)
 
     print(f"OK: {len(new_rows)} benchmark row(s) written (source: {source}), {len(skipped)} date(s) skipped.")
+
+    # Remove phantom NSE holiday rows from the stock price trading calendar.
+    # The benchmark API confirms which dates are genuine trading days; any date
+    # present in the stock prices but absent from the benchmark is a market holiday
+    # where yfinance returned stale carry-forward prices that slipped through the
+    # zero-volume filter.  Only clean when the API returned real data (hist not
+    # empty) — a completely empty fetch indicates an API outage, not a holiday.
+    if skipped and not hist.empty:
+        confirmed_holidays = [d for d in skipped if date.fromisoformat(d) >= INDEX_BASE_DATE]
+        if confirmed_holidays:
+            _clean_phantom_holidays(confirmed_holidays)
 
 
 if __name__ == "__main__":

@@ -34,8 +34,8 @@ warnings.filterwarnings("ignore", message=".*Timestamp.utcnow.*")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pipeline.compute_metrics import compute_rankings
-from portfolio_types import BacktestAnnualTax, BacktestTradeEntry, BacktestWeekResult
+from shared.ranking import compute_rankings
+from shared.types import BacktestAnnualTax, BacktestTradeEntry, BacktestWeekResult
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 PRICES_DIR = DATA_DIR / "market" / "prices"
